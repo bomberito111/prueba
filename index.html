@@ -5,7 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-<title>Bosques Urbanos v4.2 · Evaluación de Riesgo</title>
+<title>Bosques Urbanos · Evaluación de Riesgo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;700&family=Fraunces:opsz,wght@9..144,700;9..144,900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
@@ -69,8 +69,8 @@ body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:#f4f1eb;color:#
 .form-scroll::-webkit-scrollbar{width:4px}
 .form-scroll::-webkit-scrollbar-thumb{background:#ddd;border-radius:2px}
 /* ── PHASE HEADER ── */
-.phase-hdr{padding:14px 16px 10px;border-bottom:1px solid var(--border);background:#fafaf8;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10;transition:all 0.3s ease;}
-.phase-hdr-icon{width:36px;height:36px;border-radius:9px;background:var(--g900);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0;transition:all 0.3s ease;}
+.phase-hdr{padding:14px 16px 10px;border-bottom:1px solid var(--border);background:#fafaf8;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10}
+.phase-hdr-icon{width:36px;height:36px;border-radius:9px;background:var(--g900);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
 .phase-hdr-title{font-family:'Fraunces',serif;font-size:15px;font-weight:700;color:var(--ink)}
 .phase-hdr-desc{font-size:10px;font-weight:600;color:var(--muted);margin-top:1px;text-transform:uppercase;letter-spacing:.5px}
 /* ── Q BLOCKS ── */
@@ -154,7 +154,7 @@ body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:#f4f1eb;color:#
 .db-scroll{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
 .db-empty{text-align:center;padding:60px 20px;color:var(--muted);font-weight:600;font-size:13px}
 /* Tree cards */
-.tree-card{background:#fff;border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);cursor:pointer;transition:all .15s}
+.tree-card{background:#fff;border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);cursor:pointer;transition:all .15s;position:relative}
 .tree-card:hover{border-color:var(--g700);transform:translateY(-1px);box-shadow:var(--shadow-lg)}
 .tc-head{padding:11px 13px 8px;border-bottom:1px solid #f0ebe0}
 .tc-id{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--b700)}
@@ -169,7 +169,6 @@ body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:#f4f1eb;color:#
 .tp-ext{color:var(--r700);border-color:#fecaca;background:var(--r100)}
 .tc-meta{display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--muted)}
 .tc-gps{display:flex;align-items:center;gap:4px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--g800)}
-
 /* ── DETAIL MODAL ── */
 .modal-overlay{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);display:none;flex-direction:column;animation:fadeIn .2s ease}
 .modal-overlay.open{display:flex}
@@ -194,7 +193,6 @@ body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:#f4f1eb;color:#
 .rb-ext{background:var(--r100);border-color:var(--r400);color:var(--r700);animation:blink 1.5s infinite}
 .rb-level{font-family:'Fraunces',serif;font-size:26px;font-weight:900}
 .rb-label{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-top:2px}
-
 /* ── COMPLETE SCREEN ── */
 .complete-screen{position:fixed;inset:0;z-index:500;background:linear-gradient(135deg,var(--g900),#0a2214);display:none;flex-direction:column;overflow-y:auto}
 .complete-screen.open{display:flex}
@@ -221,7 +219,7 @@ body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:#f4f1eb;color:#
 .cs-rec-item{display:flex;gap:7px;align-items:flex-start;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:11px;font-weight:500;color:rgba(255,255,255,.85);line-height:1.4}
 .cs-rec-item:last-child{border-bottom:none}
 
-/* ── NOTIFICATION ── */
+/* ── NOTIFICATION (Movida hacia arriba para no tapar) ── */
 .notif{
   position:fixed;
   top:20px;
@@ -260,6 +258,16 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
   text-shadow: 0 2px 4px rgba(0,0,0,0.3);
 }
 
+/* ── PDF EXPORT CSS ── */
+@media print {
+  body > *:not(#print-container) { display: none !important; }
+  #print-container { display: block !important; position: static; width: 100%; background: #fff; padding: 0; color: #000; overflow: visible; }
+  .app-header, .bottom-nav, .notif, .modal-overlay, .complete-screen { display: none !important; }
+  @page { margin: 1.5cm; }
+  body { background: #fff; height: auto; overflow: visible; }
+}
+#print-container { display: none; }
+
 /* ── RESPONSIVE ── */
 @media(max-width:380px){
   .detail-grid,.cs-metrics{grid-template-columns:1fr}
@@ -275,12 +283,15 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
 </style>
 </head>
 <body>
+<!-- PRINT CONTAINER -->
+<div id="print-container"></div>
+
 <!-- HEADER -->
 <header class="app-header">
   <div class="brand">
     <div class="brand-icon">🌳</div>
     <div class="brand-text">
-      <div class="brand-name">Bosques Urbanos <span style="font-size:11px;font-weight:400;opacity:.6">v4.2</span></div>
+      <div class="brand-name">Bosques Urbanos <span style="font-size:11px;font-weight:400;opacity:.6">v4.1</span></div>
       <div class="brand-sub">Riesgo de Arbolado · ISA·APO·QTRA</div>
     </div>
   </div>
@@ -306,10 +317,6 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
         <div class="pdot" id="phd1"></div>
         <div class="pdot" id="phd2"></div>
         <div class="pdot" id="phd3"></div>
-        <div class="pdot" id="phd4"></div>
-        <div class="pdot" id="phd5"></div>
-        <div class="pdot" id="phd6"></div>
-        <div class="pdot" id="phd7"></div>
       </div>
     </div>
     <div class="form-scroll" id="formScroll">
@@ -340,8 +347,9 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
       <div class="db-header-top">
         <div class="db-title">Registros</div>
         <div style="display:flex; gap:8px; align-items:center;">
-          <div class="db-count" id="dbCount">— evaluaciones</div>
-          <button onclick="exportToCSV()" style="padding:6px 12px; background:var(--g800); color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:700; font-size:11px; font-family:'IBM Plex Sans',sans-serif;">📥 CSV</button>
+          <button onclick="selectAllVisible()" style="padding:6px 10px; background:var(--g100); color:var(--g900); border:1px solid var(--g700); border-radius:8px; cursor:pointer; font-weight:700; font-size:11px; font-family:'IBM Plex Sans',sans-serif;">☑️ Marcar Todos</button>
+          <!-- BOTÓN CSV ELIMINADO SEGÚN SOLICITUD -->
+          <button id="btnExportPDF" onclick="exportToPDF()" style="padding:6px 12px; background:var(--b700); color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:700; font-size:11px; font-family:'IBM Plex Sans',sans-serif;">📄 PDF (0)</button>
         </div>
       </div>
       <input type="search" class="db-search" placeholder="🔍 Buscar por ID, especie, evaluador..." oninput="updateFilters()" id="dbSearch">
@@ -419,7 +427,7 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;
   <div class="cs-header">
     <div>
       <div class="cs-title">Evaluación<br>Completada</div>
-      <div class="cs-sub">Informe · Bosques Urbanos v4.2</div>
+      <div class="cs-sub">Informe · Bosques Urbanos v4.1</div>
     </div>
     <button class="cs-close" onclick="closeComplete()">✕ Cerrar</button>
   </div>
@@ -458,14 +466,16 @@ const db = getDatabase(app);
 const treesRef = ref(db,'evaluaciones');
 window._fbPush = d => push(treesRef, d);
 window._fbOnValue = cb => onValue(treesRef, cb);
-window._fbRemove = key => remove(ref(db, 'evaluaciones/' + key));
+// Función remove agregada correctamente a nivel global
+window._fbRemove = key => remove(ref(db, 'evaluaciones/' + key)); 
+
 const dot = document.getElementById('connDot');
 if (dot) dot.classList.remove('off');
+
 window._fbOnValue(snap => {
   window._dbAll = snap.val();
   if (window.populateClientList) window.populateClientList();
   if (window.updateFilters) window.updateFilters();
-  else if (window.renderDB) window.renderDB(window._dbAll, document.getElementById('dbSearch')?.value || '');
   if (typeof refreshMap === 'function') refreshMap();
 });
 </script>
@@ -477,133 +487,60 @@ window._fbOnValue(snap => {
 
 // ─── Q&A SCHEMA ──────────────────────────────────────────
 const PHASES = [
-  { label:'ZONA Y CONDICIONES', icon:'🌿', desc:'Datos básicos, topografía y clima' },
-  { label:'PERFIL Y SALUD', icon:'🩺', desc:'Vigor, follaje y patologías' },
-  { label:'FACTOR DE CARGA',   icon:'🌬️', desc:'Suelo, viento y exposición' },
-  { label:'COPA Y RAMAS',   icon:'🌳', desc:'Defectos, diana y riesgo de copa' }, // Morado
-  { label:'TRONCO',         icon:'🪵', desc:'Defectos, diana y riesgo de tronco' },
-  { label:'RAÍCES Y CUELLO',         icon:'🌱', desc:'Defectos, diana y riesgo radicular' },
-  { label:'RIESGO FINAL',   icon:'⚠️', desc:'QTRA y Riesgo ISA global' },
-  { label:'BIOMETRÍA APO',  icon:'🔬', desc:'Medidas para análisis Rinntech' },
+  { label:'IDENTIFICACIÓN', icon:'🌿', desc:'Datos básicos del árbol y entorno' },
+  { label:'DIANA / TARGET',  icon:'🎯', desc:'Personas, vehículos y bienes expuestos' },
+  { label:'DEFECTOS',        icon:'⚠️',  desc:'Observaciones estructurales (copa, tronco, raíces)' },
+  { label:'BIOMETRÍA APO',   icon:'🔬', desc:'Medidas para análisis Rinntech (Rinn 2015)' },
 ];
 
 const QS = [
-  // Phase 0 — Identificación y Zona
-  { id:'arbolId',     ph:0, label:'ID del árbol', type:'text+gps', ph_txt:'Ej: T-104', note:'Se capturarán las coordenadas GPS.' },
+  // Phase 0 — Identificación
+  { id:'arbolId',     ph:0, label:'ID del árbol', type:'text+gps', ph_txt:'Ej: T-104', note:'Se capturarán las coordenadas GPS junto con el ID.' },
   { id:'especie',     ph:0, label:'Especie botánica', type:'text', ph_txt:'Ej: Quercus robur' },
   { id:'evaluador',   ph:0, label:'Nombre del evaluador', type:'text', ph_txt:'Nombre completo' },
   { id:'cliente',     ph:0, label:'Cliente / Municipio', type:'text', ph_txt:'Organismo o empresa', opt:true },
-  { id:'historial_fallos', ph:0, label:'Historial de fallos en la zona', type:'text', opt:true },
-  { id:'topografia', ph:0, label:'Topografía', type:'choice', opts:['Plano','Pendiente'] },
-  { id:'cambios_zona', ph:0, label:'Cambios en la zona (selecciona todos)', type:'multi', opts:['Ninguno','Cambio cota suelo','Limpieza','Cambio hidrología','Cortes de raíces'], none:'Ninguno' },
-  { id:'climatologia', ph:0, label:'Climatología', type:'multi', opts:['Vientos fuertes','Hielo','Nieve','Lluvias fuertes','Normal'], none:'Normal' },
+  { id:'vigor',       ph:0, label:'Vigor general del árbol', type:'choice', opts:['💪 Alto','🌿 Normal','⚠️ Bajo'] },
+  { id:'perfilFallo', ph:0, label:'Perfil de fallo más probable para esta especie', type:'choice', opts:['🌿 Ramas','🪵 Tronco','🌱 Raíces'] },
+  { id:'sueloCond',   ph:0, label:'Condiciones del suelo (elige todas las que apliquen)', type:'multi',
+    opts:['💧 Encharcado','✂️ Raíces cortadas / zanjas','🧱 Compactado','🚧 Pavimento sobre raíces','✅ Sin problemas'], none:'✅ Sin problemas' },
+  { id:'exposViento', ph:0, label:'Exposición al viento del árbol', type:'choice', opts:['🌬️ Protegida','🌀 Parcial','💨 Total','🌪️ Túnel de viento'] },
 
-  // Phase 1 — Perfil y Salud
-  { id:'vigor',       ph:1, label:'Vigor general del árbol', type:'choice', opts:['Bajo','Normal','Alto'] },
-  { id:'follaje_est', ph:1, label:'Follaje', type:'choice', opts:['Normal','Ninguno (estación)','Ninguno (muerte)'] },
-  { id:'tablaFollaje', ph:1, label:'Porcentajes de Follaje', type:'group', fields: [
-       {id:'fol_norm', label:'% Follaje Normal', type:'number', ph:'0-100'},
-       {id:'fol_cloro', label:'% Follaje Clorótico', type:'number', ph:'0-100'},
-       {id:'fol_necro', label:'% Follaje Necrótico', type:'number', ph:'0-100'}
-  ]},
-  { id:'tablaPlagas', ph:1, label:'Plagas y Enfermedades', type:'group', fields: [
-       {id:'abiotico_sn', label:'Abiótico', type:'select', opts:['Sí','No']},
-       {id:'abiotico_ag', label:'Agente abiótico', type:'text', ph:'Especifique...', dependsOn: {id:'abiotico_sn', val:'Sí'}},
-       {id:'biotico_sn', label:'Biótico', type:'select', opts:['Sí','No']},
-       {id:'biotico_ag', label:'Agente biótico', type:'text', ph:'Especifique...', dependsOn: {id:'biotico_sn', val:'Sí'}}
-  ]},
-  { id:'perfilFallo', ph:1, label:'Perfil de fallos por especie', type:'multi', opts:['Ramas','Tronco','Raíces','No conocido'], none:'No conocido' },
+  // Phase 1 — Diana
+  { id:'distBlanco',  ph:1, label:'Distancia del blanco más cercano al árbol', type:'choice',
+    opts:['Dentro de la copa','1× Altura del árbol','1.5× Altura del árbol','Fuera de la zona de caída'] },
+  { id:'tasaOcup',    ph:1, label:'Tasa de ocupación de la zona bajo el árbol (ISA)', type:'choice',
+    opts:['1 · Rara','2 · Ocasional','3 · Frecuente','4 · Constante'] },
+  { id:'peatones',    ph:1, label:'Peatones que transitan bajo el árbol al día (QTRA)', type:'number', unit:'peat./día', min:0, step:1, def:0 },
+  { id:'vehiculos',   ph:1, label:'Vehículos que pasan bajo el árbol al día (QTRA)', type:'number', unit:'veh./día', min:0, step:1, def:0 },
+  { id:'valorProp',   ph:1, label:'Valor de propiedad estática expuesta (USD)', type:'number', unit:'USD', min:0, step:1000, def:0, opt:true },
 
-  // Phase 2 — Factor de Carga
-  { id:'sueloCond',   ph:2, label:'Condiciones del suelo (elige todas las que apliquen)', type:'multi',
-    opts:['Encharcado','Raíces cortadas / zanjas','Compactado','Pavimento sobre raíces','Volumen limitado','Superficial','Sin problemas'], none:'Sin problemas' },
-  { id:'exposViento', ph:2, label:'Exposición al viento del árbol', type:'choice', opts:['Protegida','Parcial','Total','Túnel de viento'] },
-  { id:'tablaCarga', ph:2, label:'Factores de Carga Adicionales', type:'group', fields: [
-       {id:'tam_copa', label:'Tamaño relativo copa', type:'select', opts:['Pequeño','Medio','Grande']},
-       {id:'den_copa', label:'Densidad copa', type:'select', opts:['Escasa','Normal','Densa']},
-       {id:'ram_int', label:'Ramas interiores', type:'select', opts:['Poca','Normal','Densa']},
-       {id:'trepadora', label:'Trepadora/Muérdago', type:'select', opts:['Sí','No']}
-  ]},
-  { id:'cambios_carga', ph:2, label:'Cambios recientes o previstos en cargas', type:'text', ph_txt:'Observaciones...', opt:true },
+  // Phase 2 — Defectos
+  { id:'defCopa',     ph:2, label:'Defectos en copa y ramas', type:'multi',
+    opts:['Copa desequilibrada','Ramas muertas','Corteza incluida','Cavidades / nidos','Codominancia','Uniones débiles','Fallos previos de ramas','Cuerpos fructíferos','Sin defectos'], none:'Sin defectos' },
+  { id:'defTronco',   ph:2, label:'Defectos en el tronco', type:'multi',
+    opts:['Corteza muerta','Grietas','Exudaciones / hongos','Inclinación','Duramen descompuesto','Cuerpos fructíferos / setas','Cavidad / nido','Sin defectos'], none:'Sin defectos' },
+  { id:'defRaices',   ph:2, label:'Defectos en raíces y cuello radicular', type:'multi',
+    opts:['Levantamiento del plato radicular','Hongos / setas en base','Debilidad del suelo','Cortes / raíces dañadas','Sin defectos'], none:'Sin defectos' },
+  { id:'parteFallo',  ph:2, label:'¿Qué parte tiene mayor probabilidad de fallar?', type:'choice',
+    opts:['Rama principal','Tronco principal','Raíces / Volcado','Árbol completo'] },
+  { id:'diaFallo',    ph:2, label:'Diámetro estimado de la parte que podría fallar', type:'choice',
+    opts:['< 25 mm (insignificante)','25 – 100 mm','110 – 250 mm','> 260 mm (árbol completo)'] },
+  { id:'probFallo',   ph:2, label:'Probabilidad visual de fallo en los próximos 12 meses', type:'choice',
+    opts:['🟢 Improbable','🟡 Posible','🟠 Probable','🔴 Inminente'] },
+  { id:'consec',      ph:2, label:'Consecuencias sobre la diana si el fallo ocurre', type:'choice',
+    opts:['⚪ Insignificantes','🟡 Menores','🟠 Significativas','🔴 Severas'] },
 
-  // Phase 3 — Copa y Ramas
-  { id:'defCopa',     ph:3, label:'Defectos en copa y ramas', type:'multi',
-    opts:['Copa desequilibrada','Ramas/ramillas muertas','Ramas rotas/colgantes','Ramas sobre extendidas','Corteza incluida','Cavidades/nidos','Codominancia','Uniones débiles','Fallos previos ramas','Ramas similares presentes','Corteza muerta/pérdida','Cáncer/agallas','Albura dañada','Cuerpos fructíferos','Duramen descompuesto','Grietas','Daños por rayos','Crecimiento respuesta','Sin defectos'], none:'Sin defectos' },
-  { id:'tablaDefCopa', ph:3, label:'Detalles visuales Copa', type:'group', fields: [
-       {id:'lcr', label:'LCR % (Copa viva)', type:'number'},
-       {id:'pct_muertas', label:'% Ramas muertas', type:'number'},
-       {id:'diam_muertas', label:'Diám max muertas (cm)', type:'number'},
-       {id:'ram_rotas', label:'¿Ramas rotas/colgantes?', type:'select', opts:['Sí','No']},
-       {id:'num_rotas', label:'Núm ramas rotas', type:'number', dependsOn: {id:'ram_rotas', val:'Sí'}},
-       {id:'diam_rotas', label:'Diám max rotas (cm)', type:'number', dependsOn: {id:'ram_rotas', val:'Sí'}},
-       {id:'cavidades', label:'¿Hay cavidades?', type:'select', opts:['Sí','No']},
-       {id:'pct_cavidad', label:'% Perímetro cavidad', type:'number', dependsOn: {id:'cavidades', val:'Sí'}}
-  ]},
-  { id:'historial_poda', ph:3, label:'Historial de Poda', type:'multi', opts:['Limpieza','Aclareo','Reducción','Refaldado','Cortes a ras','Desmoche','Cola de León','Otros','Ninguno'], none:'Ninguno' },
-  { id:'copa_preocupacion', ph:3, label:'Principal preocupación (Copa)', type:'text', opt:true },
-  { id:'copa_cargas', ph:3, label:'Cargas adicionales (Copa)', type:'choice', opts:['Ninguna','Menor','Moderada','Significativa'] },
-  { id:'copa_probFallo', ph:3, label:'Probabilidad de FALLO (Copa)', type:'choice', opts:['Improbable','Posible','Probable','Inminente'] },
-  { id:'copa_diana_desc',    ph:3, label:'(DIANA COPA) Descripción de la Diana', type:'text', ph_txt:'Ej: Peatones en vereda este...' },
-  { id:'copa_diana_dist',  ph:3, label:'(DIANA COPA) Distancia del blanco más cercano', type:'choice', opts:['Dentro de la copa','1× Altura','1.5× Altura','Fuera de la zona'] },
-  { id:'copa_diana_ocup',    ph:3, label:'(DIANA COPA) Tasa de ocupación (ISA)', type:'choice', opts:['1 · Rara','2 · Ocasional','3 · Frecuente','4 · Constante'] },
-  { id:'copa_probImpacto', ph:3, label:'(DIANA COPA) Probabilidad de IMPACTO', type:'choice', opts:['Muy bajo','Bajo','Medio','Alto'] },
-  { id:'copa_consecuencias', ph:3, label:'(DIANA COPA) Consecuencias', type:'choice', opts:['Insignificante','Menor','Significativa','Severa'] },
-
-  // Phase 4 — Tronco
-  { id:'defTronco',   ph:4, label:'Defectos en el tronco', type:'multi',
-    opts:['Corteza muerta/perdida','Color/textura anormal','Cuello enterrado/no visible','Estrangulamiento','Troncos codominantes','Corteza incluida','Grietas','Albura dañada','Cáncer/agallas','Rezuman savia','Cavidades','Daños por rayo','Duramen descompuesto','Cuerpos fructíferos/setas','Inclinación','Sin defectos'], none:'Sin defectos' },
-  { id:'tablaDefTronco', ph:4, label:'Detalles visuales Tronco', type:'group', fields: [
-       {id:'prof_cuello', label:'Prof. cuello enterrado (cm)', type:'number'},
-       {id:'cavidades', label:'¿Hay cavidades?', type:'select', opts:['Sí','No']},
-       {id:'pct_cavidad', label:'% Perímetro cavidad', type:'number', dependsOn: {id:'cavidades', val:'Sí'}},
-       {id:'prof_cavidad', label:'Prof. cavidad (cm)', type:'number', dependsOn: {id:'cavidades', val:'Sí'}},
-       {id:'grados_inc', label:'Grado inclinación (°)', type:'number'},
-       {id:'inc_corr', label:'¿Inclinación corregida?', type:'select', opts:['Sí','No']},
-       {id:'esp_pared', label:'Espesor pared res. (t)', type:'number'},
-       {id:'t_R', label:'t/R %', type:'number'}
-  ]},
-  { id:'tronco_preocupacion', ph:4, label:'Principal preocupación (Tronco)', type:'text', opt:true },
-  { id:'tronco_cargas', ph:4, label:'Cargas adicionales (Tronco)', type:'choice', opts:['Ninguna','Menor','Moderada','Significativa'] },
-  { id:'tronco_probFallo', ph:4, label:'Probabilidad de FALLO (Tronco)', type:'choice', opts:['Improbable','Posible','Probable','Inminente'] },
-  { id:'tronco_diana_desc',    ph:4, label:'(DIANA TRONCO) Descripción de la Diana', type:'text', ph_txt:'Ej: Vehículos estacionados...' },
-  { id:'tronco_diana_dist',  ph:4, label:'(DIANA TRONCO) Distancia del blanco más cercano', type:'choice', opts:['Dentro de la copa','1× Altura','1.5× Altura','Fuera de la zona'] },
-  { id:'tronco_diana_ocup',    ph:4, label:'(DIANA TRONCO) Tasa de ocupación (ISA)', type:'choice', opts:['1 · Rara','2 · Ocasional','3 · Frecuente','4 · Constante'] },
-  { id:'tronco_probImpacto', ph:4, label:'(DIANA TRONCO) Probabilidad de IMPACTO', type:'choice', opts:['Muy bajo','Bajo','Medio','Alto'] },
-  { id:'tronco_consecuencias', ph:4, label:'(DIANA TRONCO) Consecuencias', type:'choice', opts:['Insignificante','Menor','Significativa','Severa'] },
-
-  // Phase 5 — Raíces
-  { id:'defRaices',   ph:5, label:'Defectos en raíces y cuello radicular', type:'multi',
-    opts:['Cuello enterrado','Estrangulamiento','Raíz muerta/degradada','Hongos/setas','Exudaciones','Cavidad/nido','Conicidad atípica','Levantamiento del plato','Debilidad de suelo','Grietas','Cortes/raíces dañadas','Sin defectos'], none:'Sin defectos' },
-  { id:'tablaDefRaices', ph:5, label:'Detalles visuales Raíces', type:'group', fields: [
-       {id:'cortes', label:'¿Hay cortes de raíces?', type:'select', opts:['Sí','No']},
-       {id:'dist_cortes', label:'Distancia cortes a tronco (cm)', type:'number', dependsOn: {id:'cortes', val:'Sí'}},
-       {id:'cavidades', label:'¿Hay cavidades?', type:'select', opts:['Sí','No']},
-       {id:'pct_cavidad', label:'% Perímetro cavidad', type:'number', dependsOn: {id:'cavidades', val:'Sí'}},
-       {id:'prof_cavidad', label:'Prof. cavidad (cm)', type:'number', dependsOn: {id:'cavidades', val:'Sí'}}
-  ]},
-  { id:'raices_preocupacion', ph:5, label:'Principal preocupación (Raíces)', type:'text', opt:true },
-  { id:'raices_cargas', ph:5, label:'Cargas adicionales (Raíces)', type:'choice', opts:['Ninguna','Menor','Moderada','Significativa'] },
-  { id:'raices_probFallo', ph:5, label:'Probabilidad de FALLO (Raíces)', type:'choice', opts:['Improbable','Posible','Probable','Inminente'] },
-  { id:'raices_diana_desc',    ph:5, label:'(DIANA RAÍCES) Descripción de la Diana', type:'text', ph_txt:'Ej: Estructura de edificio...' },
-  { id:'raices_diana_dist',  ph:5, label:'(DIANA RAÍCES) Distancia del blanco más cercano', type:'choice', opts:['Dentro de la copa','1× Altura','1.5× Altura','Fuera de la zona'] },
-  { id:'raices_diana_ocup',    ph:5, label:'(DIANA RAÍCES) Tasa de ocupación (ISA)', type:'choice', opts:['1 · Rara','2 · Ocasional','3 · Frecuente','4 · Constante'] },
-  { id:'raices_probImpacto', ph:5, label:'(DIANA RAÍCES) Probabilidad de IMPACTO', type:'choice', opts:['Muy bajo','Bajo','Medio','Alto'] },
-  { id:'raices_consecuencias', ph:5, label:'(DIANA RAÍCES) Consecuencias', type:'choice', opts:['Insignificante','Menor','Significativa','Severa'] },
-
-  // Phase 6 — QTRA y Riesgo Global
-  { id:'peatones',    ph:6, label:'Peatones bajo el árbol al día (QTRA)', type:'number', unit:'peat./día', min:0, step:1, def:0 },
-  { id:'vehiculos',   ph:6, label:'Vehículos que pasan bajo el árbol al día (QTRA)', type:'number', unit:'veh./día', min:0, step:1, def:0 },
-  { id:'valorProp',   ph:6, label:'Valor de propiedad estática expuesta (USD)', type:'number', unit:'USD', min:0, step:1000, def:0, opt:true },
-  { id:'qtra_size',   ph:6, label:'Diámetro de parte más probable en fallar (QTRA)', type:'choice', opts:['< 25 mm','25 – 100 mm','110 – 250 mm','> 260 mm'] },
-
-  // Phase 7 — Biometría Rinntech
-  { id:'H',           ph:7, label:'Altura total del árbol — H', type:'number', unit:'cm', min:50, step:10, def:1500, note:'Hi (sección de referencia) se fija internamente a 130 cm.' },
-  { id:'C',           ph:7, label:'Altura de inicio de la copa — C', type:'number', unit:'cm', min:0, step:10, def:800 },
-  { id:'Di',          ph:7, label:'Diámetro de sección INTACTA a 130 cm — Di', type:'number', unit:'cm', min:2, step:.5, def:40 },
-  { id:'Hd',          ph:7, label:'Altura del defecto / cuello de botella — Hd', type:'number', unit:'cm', min:0, step:1, def:10 },
-  { id:'Dd',          ph:7, label:'Diámetro exterior en la zona del defecto — Dd', type:'number', unit:'cm', min:2, step:.5, def:50 },
-  { id:'tActual',     ph:7, label:'Espesor medido de pared residual — t_actual', type:'number', unit:'cm', min:0, step:.5, def:0, note:'Medido con resistógrafo o tomógrafo. Ingresa 0 si no dispones del dato.', opt:true },
-  { id:'topologia',   ph:7, label:'Topología del defecto en la sección', type:'choice', opts:['⭕ Cavidad central','🔴 Pudrición exterior','💥 Apertura en tronco'] },
+  // Phase 3 — Biometría Rinntech
+  { id:'H',           ph:3, label:'Altura total del árbol — H', type:'number', unit:'cm', min:50, step:10, def:1500,
+    note:'Hi (sección de referencia) se fija internamente a 130 cm (altura de pecho estándar).' },
+  { id:'C',           ph:3, label:'Altura de inicio de la copa — C', type:'number', unit:'cm', min:0, step:10, def:800 },
+  { id:'Di',          ph:3, label:'Diámetro de sección INTACTA a 130 cm — Di', type:'number', unit:'cm', min:2, step:.5, def:40 },
+  { id:'Hd',          ph:3, label:'Altura del defecto / cuello de botella — Hd', type:'number', unit:'cm', min:0, step:1, def:10 },
+  { id:'Dd',          ph:3, label:'Diámetro exterior en la zona del defecto — Dd', type:'number', unit:'cm', min:2, step:.5, def:50 },
+  { id:'tActual',     ph:3, label:'Espesor medido de pared residual — t_actual', type:'number', unit:'cm', min:0, step:.5, def:0,
+    note:'Medido con resistógrafo o tomógrafo. Ingresa 0 si no dispones del dato.', opt:true },
+  { id:'topologia',   ph:3, label:'Topología del defecto en la sección', type:'choice',
+    opts:['⭕ Cavidad central','🔴 Pudrición exterior','💥 Apertura en tronco'] },
 ];
 
 const TOTAL = QS.length;
@@ -619,28 +556,9 @@ let mapMarkers = [];
 let pickerMapInstance = null;
 let activeGpsIdx = -1;
 
-// ─── CHECK DEPENDENCIES ───────────────────────────────────
-function checkGroupDeps(qId) {
-  const q = QS.find(x => x.id === qId);
-  if (!q || !q.fields) return;
-  
-  q.fields.forEach(f => {
-    if (f.dependsOn) {
-      const depEl = document.getElementById(`gf-${qId}-${f.dependsOn.id}`);
-      const wrap = document.getElementById(`wrap-${qId}-${f.id}`);
-      if (depEl && wrap) {
-        if (depEl.value === f.dependsOn.val) {
-          wrap.style.display = 'block';
-        } else {
-          wrap.style.display = 'none';
-          const input = document.getElementById(`gf-${qId}-${f.id}`);
-          if (input) input.value = '';
-        }
-      }
-    }
-  });
-}
-window.checkGroupDeps = checkGroupDeps;
+// NUEVO: Set para rastrear los árboles seleccionados para PDF
+window.selectedTrees = new Set();
+window.currentFilteredEntries = [];
 
 // ─── BUILD FORM ───────────────────────────────────────────
 function buildForm() {
@@ -655,18 +573,11 @@ function buildForm() {
       const hdr = document.createElement('div');
       hdr.className = 'phase-hdr';
       hdr.id = 'phase-hdr-' + q.ph;
-      
-      // Color morado específico para Copa y Ramas
-      if (q.ph === 3) {
-          hdr.style.backgroundColor = '#f3e8ff';
-          hdr.style.borderBottomColor = '#d8b4fe';
-      }
-
       hdr.innerHTML = `
-        <div class="phase-hdr-icon" ${q.ph === 3 ? 'style="background:#9333ea;"' : ''}>${ph.icon}</div>
+        <div class="phase-hdr-icon">${ph.icon}</div>
         <div>
           <div class="phase-hdr-title">${ph.label}</div>
-          <div class="phase-hdr-desc" ${q.ph === 3 ? 'style="color:#7e22ce;"' : ''}>${ph.desc}</div>
+          <div class="phase-hdr-desc">${ph.desc}</div>
         </div>`;
       scroll.appendChild(hdr);
       lastPh = q.ph;
@@ -674,11 +585,6 @@ function buildForm() {
     const block = document.createElement('div');
     block.className = 'q-block locked';
     block.id = 'qblock-' + idx;
-    
-    if (q.ph === 3) {
-      block.style.borderLeftColor = '#a855f7';
-    }
-
     block.innerHTML = buildQHTML(q, idx);
     scroll.appendChild(block);
   });
@@ -699,15 +605,7 @@ function buildQHTML(q, idx) {
   const isAnswered = val !== undefined && val !== null && val !== '';
   let inputHTML = '';
   if (isAnswered) {
-    let displayVal = val;
-    if (typeof val === 'object' && !Array.isArray(val)) {
-        displayVal = q.fields.map(f => `${f.label.split(' ')[0]}: ${val[f.id]||'-'}`).join(' | ');
-    } else if (Array.isArray(val)) {
-        displayVal = val.join(', ');
-    } else {
-        displayVal = val + (q.unit ? ' ' + q.unit : '');
-    }
-
+    const displayVal = Array.isArray(val) ? val.join(', ') : val + (q.unit ? ' ' + q.unit : '');
     inputHTML = `
       <div class="answer-display">
         <div class="answer-value">✅ ${displayVal}</div>
@@ -739,42 +637,6 @@ function buildWidget(q, idx) {
       <div class="confirm-row">
         <button class="confirm-btn" onclick="submitMulti(${idx})">Confirmar →</button>
       </div>`;
-  }
-  if (q.type === 'group') {
-    const gAns = answers[q.id] || {};
-    const fieldsHtml = q.fields.map(f => {
-      let input = '';
-      
-      const onChangeAttr = f.type === 'select' ? `onchange="if(window.checkGroupDeps) window.checkGroupDeps('${q.id}')"` : `onkeyup="if(window.checkGroupDeps) window.checkGroupDeps('${q.id}')"`;
-      
-      if (f.type === 'select') {
-        input = `<select id="gf-${q.id}-${f.id}" class="field-inp" style="width:100%;margin-top:4px;padding:8px;" ${onChangeAttr}>
-          <option value="">Seleccione...</option>
-          ${f.opts.map(o => `<option value="${o}" ${gAns[f.id]===o?'selected':''}>${o}</option>`).join('')}
-        </select>`;
-      } else {
-        input = `<input type="${f.type}" id="gf-${q.id}-${f.id}" value="${gAns[f.id]||''}" class="field-inp" style="width:100%;margin-top:4px;padding:8px;" placeholder="${f.ph||''}" ${onChangeAttr}>`;
-      }
-      
-      let displayStyle = 'block';
-      if (f.dependsOn) {
-        const depVal = gAns[f.dependsOn.id];
-        if (depVal !== f.dependsOn.val) displayStyle = 'none';
-      }
-      
-      return `<div id="wrap-${q.id}-${f.id}" style="margin-bottom:10px; display:${displayStyle};"><div style="font-size:11px;font-weight:700;color:var(--muted);">${f.label}</div>${input}</div>`;
-    }).join('');
-
-    setTimeout(() => { if(window.checkGroupDeps) window.checkGroupDeps(q.id); }, 50);
-
-    return `
-      <div style="background:#fafaf8; border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:10px; display:grid; grid-template-columns:1fr 1fr; gap:10px;">
-        ${fieldsHtml}
-      </div>
-      <div class="confirm-row">
-        <button class="confirm-btn" onclick="submitGroup(${idx})">Confirmar Tabla →</button>
-      </div>
-    `;
   }
   if (q.type === 'text' || q.type === 'text+gps') {
     const isGps = q.type === 'text+gps';
@@ -813,7 +675,7 @@ function buildResultsHTML() {
     <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:9px">Resultados en tiempo real · ISA · APO · QTRA</div>
     <div class="results-top">
       <div class="r-card">
-        <div class="r-card-label">ISA TRAQ GLOBAL</div>
+        <div class="r-card-label">ISA TRAQ</div>
         <div class="r-card-val" id="r-isaLevel">—</div>
         <div class="r-card-sub" id="r-isaSub">Esperando datos...</div>
         <div id="r-override" style="display:none;margin-top:5px;font-size:9px;font-weight:700;color:#fbbf24;background:rgba(251,191,36,.15);padding:3px 7px;border-radius:5px">⚡ Override biomecánico</div>
@@ -825,12 +687,6 @@ function buildResultsHTML() {
       </div>
     </div>
     <div class="r-bio">
-      <div class="r-bio-label">Riesgo Independiente (ISA)</div>
-      <div class="r-bio-row"><span class="r-bio-key">Copa y Ramas</span><span class="r-bio-val rv-neu" id="r-isa-copa">—</span></div>
-      <div class="r-bio-row"><span class="r-bio-key">Tronco</span><span class="r-bio-val rv-neu" id="r-isa-tronco">—</span></div>
-      <div class="r-bio-row"><span class="r-bio-key">Raíces</span><span class="r-bio-val rv-neu" id="r-isa-raices">—</span></div>
-    </div>
-    <div class="r-bio" style="margin-top:10px;">
       <div class="r-bio-label">Rinntech APO — Biomecánica</div>
       <div class="r-bio-row"><span class="r-bio-key">t_req (mínimo)</span><span class="r-bio-val rv-neu" id="r-treq">—</span></div>
       <div class="r-bio-row"><span class="r-bio-key">t_actual (medido)</span><span class="r-bio-val rv-neu" id="r-tact">—</span></div>
@@ -878,16 +734,6 @@ function submitMulti(idx) {
   const sel = _multiSel[idx];
   answers[q.id] = (sel && sel.size > 0) ? [...sel] : [q.none];
   delete _multiSel[idx];
-  afterSubmit(idx);
-}
-function submitGroup(idx) {
-  const q = QS[idx];
-  let ans = {};
-  q.fields.forEach(f => {
-    const el = document.getElementById(`gf-${q.id}-${f.id}`);
-    if(el) ans[f.id] = el.value;
-  });
-  answers[q.id] = ans;
   afterSubmit(idx);
 }
 function submitText(idx) {
@@ -1002,18 +848,21 @@ function openMapPicker(idx) {
   
   if (!pickerMapInstance) {
     pickerMapInstance = L.map('pickerMap', { center: [-33.45, -70.65], zoom: 16 });
+    // Añadido maxZoom y maxNativeZoom para permitir acercamiento profundo
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-      attribution: 'Tiles &copy; Esri', maxZoom: 19
+      attribution: 'Tiles &copy; Esri',
+      maxZoom: 22,
+      maxNativeZoom: 19
     }).addTo(pickerMapInstance);
   }
   
   setTimeout(() => {
     pickerMapInstance.invalidateSize();
     if (gpsCoords) {
-      pickerMapInstance.setView([gpsCoords.lat, gpsCoords.lng], 18);
+      pickerMapInstance.setView([gpsCoords.lat, gpsCoords.lng], 19);
     } else if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(pos => {
-        pickerMapInstance.setView([pos.coords.latitude, pos.coords.longitude], 18);
+        pickerMapInstance.setView([pos.coords.latitude, pos.coords.longitude], 19);
       }, err => console.log(err), { enableHighAccuracy: true });
     }
   }, 250);
@@ -1054,7 +903,7 @@ function updateProgress() {
   const phase = QS[Math.min(curQ, TOTAL - 1)].ph;
   const lbl = document.getElementById('progLabel');
   if (lbl) lbl.textContent = PHASES[phase].label;
-  for (let i = 0; i < 8; i++) {
+  for (let i = 0; i < 4; i++) {
     const d = document.getElementById('phd' + i);
     if (d) d.className = 'pdot' + (i < phase ? ' done' : i === phase ? ' active' : '');
   }
@@ -1093,61 +942,45 @@ function calcBio() {
   return { valid:true, isUnsafe, margin, t_req, Hf, ratio, tAct: isNaN(tAct) ? 0 : tAct };
 }
 
-// MATRIZ ISA ESPECÍFICA POR PARTE
-function calcRiskPart(pFallo, pImpacto, consec) {
-  if (!pFallo || !pImpacto || !consec) return { level: 'bajo', probComb: 'improbable', score: 1 };
-  
-  const f = pFallo.toLowerCase().replace('🟢 ','').replace('🟡 ','').replace('🟠 ','').replace('🔴 ','').trim();
-  const i = pImpacto.toLowerCase().replace(' ','_');
-  const c = consec.toLowerCase().replace('⚪ ','').replace('🟡 ','').replace('🟠 ','').replace('🔴 ','').replace('severa', 'severo').trim();
-
-  // Matriz 1
-  const m1 = {
-    inminente:  {muy_bajo:'improbable', bajo:'algo_probable', medio:'probable',      alto:'muy_probable'},
-    probable:   {muy_bajo:'improbable', bajo:'improbable',    medio:'algo_probable', alto:'probable'},
-    posible:    {muy_bajo:'improbable', bajo:'improbable',    medio:'improbable',    alto:'algo_probable'},
-    improbable: {muy_bajo:'improbable', bajo:'improbable',    medio:'improbable',    alto:'improbable'}
-  };
-  const probComb = m1[f]?.[i] || 'improbable';
-
-  // Matriz 2
-  const m2 = {
-    muy_probable:  {insignificante:'bajo', menor:'moderado', significativa:'alto',     severo:'extremo'},
-    probable:      {insignificante:'bajo', menor:'moderado', significativa:'alto',     severo:'alto'},
-    algo_probable: {insignificante:'bajo', menor:'bajo',     significativa:'moderado', severo:'moderado'},
-    improbable:    {insignificante:'bajo', menor:'bajo',     significativa:'bajo',     severo:'bajo'}
-  };
-  
-  const level = m2[probComb]?.[c] || 'bajo';
-  const scores = { 'bajo':1, 'moderado':2, 'alto':3, 'extremo':4 };
-  
-  return { level, probComb, score: scores[level] };
-}
-
 function calcISA(isUnsafe, margin) {
-  const rCopa = calcRiskPart(get('copa_probFallo'), get('copa_probImpacto'), get('copa_consecuencias'));
-  const rTronco = calcRiskPart(get('tronco_probFallo'), get('tronco_probImpacto'), get('tronco_consecuencias'));
-  const rRaices = calcRiskPart(get('raices_probFallo'), get('raices_probImpacto'), get('raices_consecuencias'));
-  
-  let maxScore = Math.max(rCopa.score, rTronco.score, rRaices.score);
-  let level = 'bajo';
-  let probComb = 'improbable';
-  
-  if (maxScore === rCopa.score) { level = rCopa.level; probComb = rCopa.probComb; }
-  if (maxScore === rTronco.score) { level = rTronco.level; probComb = rTronco.probComb; }
-  if (maxScore === rRaices.score) { level = rRaices.level; probComb = rRaices.probComb; }
+  const pf = (get('probFallo') || '').toLowerCase();
+  let probFallo = pf.includes('improbable')||pf.includes('🟢') ? 'improbable'
+    : pf.includes('posible')||pf.includes('🟡') ? 'posible'
+    : (pf.includes('probable')&&!pf.includes('im'))||pf.includes('🟠') ? 'probable'
+    : pf.includes('inminente')||pf.includes('🔴') ? 'inminente' : 'posible';
 
   let override = false;
   if (isUnsafe) {
     override = true;
-    if (margin !== null && margin < 50) {
-       level = 'extremo'; probComb = 'inminente'; 
-    } else {
-       level = 'alto'; probComb = 'probable';
-    }
+    probFallo = (margin !== null && margin < 50) ? 'inminente' : 'probable';
   }
-  
-  return { level, probComb, override, rCopa, rTronco, rRaices };
+
+  const dist = get('distBlanco') || '';
+  const ocup = parseInt((get('tasaOcup')||'1').charAt(0)) || 1;
+  const dl = dist.includes('copa') ? 3 : dist.includes('1.5') ? 1 : (dist.includes('1×')||dist.includes('Altura')) ? 2 : 0;
+  const adj = Math.min(3, Math.max(0, dl + (ocup>=4?1:0) - (ocup<=1?1:0)));
+  const impacto = ['muy_baja','baja','media','alta'][adj];
+
+  const m1 = {
+    inminente:  {muy_baja:'improbable',baja:'algo_probable',media:'probable',    alta:'muy_probable'},
+    probable:   {muy_baja:'improbable',baja:'improbable',   media:'algo_probable',alta:'probable'},
+    posible:    {muy_baja:'improbable',baja:'improbable',   media:'improbable',   alta:'algo_probable'},
+    improbable: {muy_baja:'improbable',baja:'improbable',   media:'improbable',   alta:'improbable'}
+  };
+  const probComb = m1[probFallo]?.[impacto] || 'improbable';
+
+  const cs = (get('consec') || '').toLowerCase();
+  const cons = cs.includes('sever')||cs.includes('🔴') ? 'severas'
+    : cs.includes('signif')||cs.includes('🟠') ? 'significativas'
+    : cs.includes('menor')||cs.includes('🟡') ? 'menores' : 'insignificantes';
+
+  const m2 = {
+    muy_probable:  {insignificantes:'bajo',menores:'moderado',significativas:'alto',   severas:'extremo'},
+    probable:      {insignificantes:'bajo',menores:'moderado',significativas:'alto',   severas:'alto'},
+    algo_probable: {insignificantes:'bajo',menores:'bajo',    significativas:'moderado',severas:'moderado'},
+    improbable:    {insignificantes:'bajo',menores:'bajo',    significativas:'bajo',   severas:'bajo'}
+  };
+  return { level: m2[probComb]?.[cons]||'bajo', probComb, override };
 }
 
 function calcQTRA(isUnsafe, margin) {
@@ -1161,7 +994,7 @@ function calcQTRA(isUnsafe, margin) {
   const tPr = prop / VOSL;
   const target = Math.min(1, Math.max(tP, tV, tPr, 0));
 
-  const ds = get('qtra_size') || '';
+  const ds = get('diaFallo') || '';
   const size = ds.includes('260')||ds.includes('>') ? 0.5
     : ds.includes('110') ? 0.027
     : ds.includes('25') ? 0.002 : 0;
@@ -1206,14 +1039,6 @@ function renderResults(bio, isa, qtra) {
     const ov = document.getElementById('r-override');
     if (ov) ov.style.display = isa.override ? 'block' : 'none';
   }
-  
-  // Independent risks UI
-  const rc = document.getElementById('r-isa-copa');
-  if (rc) { rc.textContent = lm[isa.rCopa?.level]||'—'; rc.style.color = lc[isa.rCopa?.level]||'var(--muted)'; }
-  const rt = document.getElementById('r-isa-tronco');
-  if (rt) { rt.textContent = lm[isa.rTronco?.level]||'—'; rt.style.color = lc[isa.rTronco?.level]||'var(--muted)'; }
-  const rr = document.getElementById('r-isa-raices');
-  if (rr) { rr.textContent = lm[isa.rRaices?.level]||'—'; rr.style.color = lc[isa.rRaices?.level]||'var(--muted)'; }
 
   const qEl = document.getElementById('r-qtraFrac');
   if (qEl) {
@@ -1263,18 +1088,15 @@ function buildRecs(isa, bio, qtra) {
   else if (isa.level==='alto') recs.push({c:'#fb923c',t:'⚠️ ALTO: Intervención programada en < 3 meses. Señalización preventiva.'});
   else if (isa.level==='moderado') recs.push({c:'#fbbf24',t:'🟡 MODERADO: Monitoreo regular. Plan de manejo a 6–12 meses.'});
   else recs.push({c:'#4ade80',t:'✅ BAJO: Inspección rutinaria en el intervalo habitual.'});
-  
   if (bio.isUnsafe) recs.push({c:'#f87171',t:`⚡ Rinntech crítico: t_req=${bio.t_req?.toFixed(2)} cm > t_actual. Inspección urgente.`});
-  
-  const dr = get('defRaices') || [];
-  if (dr.some(v=>v.includes('Levantamiento'))) recs.push({c:'#fb923c',t:'🌱 Levantamiento del plato radicular: evaluar riesgo de volcado.'});
-  
-  const sc = get('sueloCond') || [];
-  if (sc.some(v=>v.includes('Raíces'))) recs.push({c:'#fbbf24',t:'Raíces cortadas / zanjas: evaluar estabilidad radicular.'});
-  
+  const dr = get('defRaices');
+  if (dr && (Array.isArray(dr)?dr:[dr]).some(v=>v.includes('Levantamiento')))
+    recs.push({c:'#fb923c',t:'🌱 Levantamiento del plato radicular: evaluar riesgo de volcado.'});
+  const sc = get('sueloCond');
+  if (sc && (Array.isArray(sc)?sc:[sc]).some(v=>v.includes('Raíces')))
+    recs.push({c:'#fbbf24',t:'Raíces cortadas / zanjas: evaluar estabilidad radicular.'});
   if (qtra.denom <= 1000) recs.push({c:'#f87171',t:'QTRA INACEPTABLE: intervención económicamente justificada.'});
   else if (qtra.denom <= 1000000) recs.push({c:'#fbbf24',t:'QTRA ALARP: comparar costo de intervención con riesgo de daño.'});
-  
   return recs;
 }
 
@@ -1308,17 +1130,12 @@ function showCompleteScreen() {
 
   document.getElementById('csBody').innerHTML = `
     <div class="cs-card">
-      <div class="cs-card-title">■ Clasificación ISA TRAQ (GLOBAL)</div>
+      <div class="cs-card-title">■ Clasificación ISA TRAQ</div>
       <div class="risk-display">
         <div class="rd-level ${lc[isa.level]||'rd-low'}">${lm[isa.level]||'—'}</div>
         <div class="rd-label">${pl[isa.probComb]||'—'}</div>
       </div>
-      <div style="display:flex; justify-content:space-between; margin-top:10px; padding-top:10px; border-top:1px solid rgba(255,255,255,0.1); font-size:10px; color:#aaa;">
-         <div>Copa: <strong style="color:#fff">${lm[isa.rCopa?.level]||'-'}</strong></div>
-         <div>Tronco: <strong style="color:#fff">${lm[isa.rTronco?.level]||'-'}</strong></div>
-         <div>Raíces: <strong style="color:#fff">${lm[isa.rRaices?.level]||'-'}</strong></div>
-      </div>
-      ${isa.override?'<div style="text-align:center;font-size:10px;font-weight:700;color:#fbbf24;background:rgba(251,191,36,.1);padding:6px;border-radius:6px;margin-top:10px;">⚡ Nivel sobreescrito por análisis biomecánico Rinntech APO</div>':''}
+      ${isa.override?'<div style="text-align:center;font-size:10px;font-weight:700;color:#fbbf24;background:rgba(251,191,36,.1);padding:6px;border-radius:6px">⚡ Nivel sobreescrito por análisis biomecánico Rinntech APO</div>':''}
     </div>
     <div class="cs-card">
       <div class="cs-card-title">■ QTRA v5 — Riesgo Actuarial</div>
@@ -1355,7 +1172,7 @@ function showCompleteScreen() {
             t_req = 0.5 × (Dd − ⁴√(Dd⁴ − Di³·Dd·ratio)) = ${bio.t_req.toFixed(2)} cm
           </div>
         </div>
-      ` : '<div style="color:rgba(255,255,255,.4);text-align:center;padding:20px;font-size:12px">Complete la Fase 8 (Biometría) para el análisis biomecánico.</div>'}
+      ` : '<div style="color:rgba(255,255,255,.4);text-align:center;padding:20px;font-size:12px">Complete la Fase 4 (Biometría) para el análisis biomecánico.</div>'}
     </div>
     <div class="cs-card">
       <div class="cs-card-title">💡 Recomendaciones</div>
@@ -1429,11 +1246,16 @@ window.saveAssessment = saveAssessment;
 function initMap() {
   if (mapInstance) return;
   
+  // Capas disponibles con zoom extremo permitido
   const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-    attribution: '© OpenStreetMap', maxZoom: 19
+    attribution: '© OpenStreetMap', 
+    maxZoom: 22, 
+    maxNativeZoom: 19
   });
   const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
-    attribution: 'Tiles &copy; Esri', maxZoom: 19
+    attribution: 'Tiles &copy; Esri', 
+    maxZoom: 22, 
+    maxNativeZoom: 19
   });
 
   mapInstance = L.map('leafletMap', { 
@@ -1442,6 +1264,7 @@ function initMap() {
     layers: [sat] // Mapa satelital por defecto
   });
   
+  // Control de capas
   const baseMaps = {
     "Satelital": sat,
     "Mapa Normal": osm
@@ -1525,19 +1348,57 @@ function updateFilters() {
       (d.especie || '').toLowerCase().includes(search) ||
       (d.evaluador || '').toLowerCase().includes(search);
     const cMatch = !client || d.cliente === client || (d.answers && d.answers.cliente === client);
-    
-    const ocup1 = (d.answers && d.answers.copa_diana_ocup) || '';
-    const ocup2 = (d.answers && d.answers.tronco_diana_ocup) || '';
-    const ocup3 = (d.answers && d.answers.raices_diana_ocup) || '';
-    const dMatch = !diana || ocup1.startsWith(diana) || ocup2.startsWith(diana) || ocup3.startsWith(diana);
-    
+    const dMatch = !diana || (d.answers && d.answers.tasaOcup && d.answers.tasaOcup.startsWith(diana));
     const vMatch = ((d.answers && parseFloat(d.answers.valorProp)) || 0) >= valMin;
     return sMatch && cMatch && dMatch && vMatch;
   });
 
+  window.currentFilteredEntries = entries; // Guardar filtrados
   renderDBList(entries);
 }
 window.updateFilters = updateFilters;
+
+// ─── LOGICA DE SELECCION PARA PDF ───
+function toggleSelection(event, key) {
+  event.stopPropagation(); // Evitar que se abra el modal de detalle
+  if (event.target.checked) {
+    window.selectedTrees.add(key);
+  } else {
+    window.selectedTrees.delete(key);
+  }
+  updatePDFButtonText();
+}
+window.toggleSelection = toggleSelection;
+
+function selectAllVisible() {
+  if (!window.currentFilteredEntries || window.currentFilteredEntries.length === 0) return;
+  
+  const checkboxes = document.querySelectorAll('#dbScroll input[type="checkbox"]');
+  const allChecked = Array.from(checkboxes).every(cb => cb.checked);
+  
+  checkboxes.forEach(cb => {
+    cb.checked = !allChecked;
+  });
+  
+  window.currentFilteredEntries.forEach(([key]) => {
+    if (!allChecked) {
+      window.selectedTrees.add(key);
+    } else {
+      window.selectedTrees.delete(key);
+    }
+  });
+  
+  updatePDFButtonText();
+}
+window.selectAllVisible = selectAllVisible;
+
+function updatePDFButtonText() {
+  const btn = document.getElementById('btnExportPDF');
+  if (btn) {
+    const count = window.selectedTrees.size;
+    btn.innerHTML = `📄 PDF (${count})`;
+  }
+}
 
 function renderDBList(entries) {
   const scroll = document.getElementById('dbScroll');
@@ -1557,64 +1418,117 @@ function renderDBList(entries) {
   
   scroll.innerHTML = entries.map(([key, d]) => {
     const dt = new Date(d.timestamp).toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'});
+    const isChecked = window.selectedTrees.has(key) ? 'checked' : '';
+    
     return `
-      <div class="tree-card" onclick="showTreeDetail('${key}')">
-        <div class="tc-head">
-          <div class="tc-id">${d.arbolId}</div>
-          <div class="tc-species">${d.especie}</div>
-          <div class="tc-evaluator">Por: ${d.evaluador||'—'}${d.cliente?' · '+d.cliente:''}</div>
+      <div class="tree-card" style="position: relative;">
+        <!-- Checkbox para selección de PDF -->
+        <div style="position: absolute; top: 12px; right: 12px; z-index: 10;">
+          <input type="checkbox" style="width: 22px; height: 22px; cursor: pointer; accent-color: var(--g800);"
+                 onchange="toggleSelection(event, '${key}')" ${isChecked}>
         </div>
-        <div class="tc-body">
-          <div class="tc-pills">
-            <span class="tc-pill ${lvlCls[d.isaLevel]||'tp-low'}">ISA: ${lvlLabel[d.isaLevel]||'—'}</span>
-            <span class="tc-pill" style="color:#555;border-color:#ddd">RoH: ${d.qtraStr||'—'}</span>
-            ${d.bioCritical?'<span class="tc-pill tp-ext">⚠️ Cuello Crítico</span>':''}
+        
+        <div onclick="showTreeDetail('${key}')">
+          <div class="tc-head" style="padding-right: 40px;">
+            <div class="tc-id">${d.arbolId}</div>
+            <div class="tc-species">${d.especie}</div>
+            <div class="tc-evaluator">Por: ${d.evaluador||'—'}${d.cliente?' · '+d.cliente:''}</div>
           </div>
-          <div class="tc-meta">
-            ${d.gps?`<div class="tc-gps">📍 ${d.gps.lat.toFixed(4)}, ${d.gps.lng.toFixed(4)}</div>`:'<div></div>'}
-            <div class="tc-date">${dt}</div>
+          <div class="tc-body">
+            <div class="tc-pills">
+              <span class="tc-pill ${lvlCls[d.isaLevel]||'tp-low'}">ISA: ${lvlLabel[d.isaLevel]||'—'}</span>
+              <span class="tc-pill" style="color:#555;border-color:#ddd">RoH: ${d.qtraStr||'—'}</span>
+              ${d.bioCritical?'<span class="tc-pill tp-ext">⚠️ Cuello Crítico</span>':''}
+            </div>
+            <div class="tc-meta">
+              ${d.gps?`<div class="tc-gps">📍 ${d.gps.lat.toFixed(4)}, ${d.gps.lng.toFixed(4)}</div>`:'<div></div>'}
+              <div class="tc-date">${dt}</div>
+            </div>
+            ${d.bioMargin!=null?`<div style="margin-top:3px;font-size:10px;font-weight:700;color:${d.bioCritical?'var(--r700)':'var(--g800)'}">Margen Rinntech: ${typeof d.bioMargin==='number'?d.bioMargin.toFixed(1)+'%':d.bioMargin+'%'}</div>`:''}
           </div>
-          ${d.bioMargin!=null?`<div style="margin-top:3px;font-size:10px;font-weight:700;color:${d.bioCritical?'var(--r700)':'var(--g800)'}">Margen Rinntech: ${typeof d.bioMargin==='number'?d.bioMargin.toFixed(1)+'%':d.bioMargin+'%'}</div>`:''}
         </div>
       </div>`;
   }).join('');
 }
 
-function filterDB(val) { 
-  if (window.updateFilters) updateFilters(); 
-}
-window.filterDB = filterDB;
+// ─── DESCARGA A PDF (DE LOS SELECCIONADOS) ───
+function exportToPDF() {
+  if (window.selectedTrees.size === 0) {
+    return showNotif("⚠️ Selecciona al menos un árbol marcando su casilla");
+  }
 
-function exportToCSV() {
+  let printDiv = document.getElementById('print-container');
+  if (!printDiv) {
+    printDiv = document.createElement('div');
+    printDiv.id = 'print-container';
+    document.body.appendChild(printDiv);
+  }
+
+  let html = `<h1 style="font-family:'Fraunces', serif; margin-bottom: 5px;">Reporte de Arbolado - Bosques Urbanos</h1>`;
+  html += `<p style="color:#666; margin-bottom: 20px;">Total de registros en este reporte: ${window.selectedTrees.size}</p><hr style="margin-bottom:30px;"/>`;
+
   const data = window._dbAll;
-  if (!data) return showNotif("No hay datos para exportar");
+  const selectedEntries = Object.entries(data)
+      .filter(([key]) => window.selectedTrees.has(key))
+      .reverse();
 
-  let csvContent = "data:text/csv;charset=utf-8,ID,Especie,Evaluador,Cliente,Fecha,Latitud,Longitud,Riesgo ISA Global,RoH QTRA,Margen APO,Valor Propiedad USD\n";
-
-  Object.values(data).forEach(d => {
-    const dt = new Date(d.timestamp).toLocaleDateString('es-ES');
-    const lat = d.gps ? d.gps.lat : "";
-    const lng = d.gps ? d.gps.lng : "";
-    const isa = d.isaLevel || "";
-    const qtra = d.qtraStr || "";
-    const margen = d.bioMargin !== undefined && d.bioMargin !== null ? d.bioMargin : "";
+  selectedEntries.forEach(([key, d]) => {
+    const ans = d.answers || {};
+    const dt = new Date(d.timestamp).toLocaleString('es-ES');
     
-    const cliente = d.cliente || (d.answers && d.answers.cliente) || "";
-    const valor = (d.answers && d.answers.valorProp) || "";
+    html += `<div style="page-break-inside: avoid; margin-bottom: 40px; border: 1px solid #ccc; padding: 20px; border-radius: 8px;">`;
+    html += `<h2 style="font-family:'Fraunces', serif; margin-top: 0; color: #0f3320;">🌳 ID: ${d.arbolId || 'S/ID'} - ${d.especie || 'Desconocida'}</h2>`;
+    
+    html += `<div style="background: #f0fdf4; padding: 10px; border: 1px solid #15803d; border-radius: 6px; margin-bottom: 15px;">`;
+    html += `<p style="margin: 0 0 5px 0;"><strong>Riesgo ISA TRAQ:</strong> <span style="text-transform: uppercase; font-weight: bold;">${(d.isaLevel || 'bajo')}</span></p>`;
+    html += `<p style="margin: 0 0 5px 0;"><strong>QTRA RoH:</strong> ${d.qtraStr || '—'}</p>`;
+    if (d.bioMargin != null) {
+      html += `<p style="margin: 0;"><strong>Margen APO Rinntech:</strong> ${typeof d.bioMargin==='number'?d.bioMargin.toFixed(1):d.bioMargin}%</p>`;
+    }
+    html += `</div>`;
+    
+    html += `<table style="width: 100%; border-collapse: collapse; font-size: 13px; font-family:'IBM Plex Sans', sans-serif;">`;
+    
+    // Recorrer todas las preguntas del formulario para imprimir TODA la información
+    QS.forEach(q => {
+      let val = ans[q.id];
+      if (val === undefined && d[q.id] !== undefined) val = d[q.id];
+      if (val !== undefined && val !== null && val !== '') {
+        if (Array.isArray(val)) val = val.join(', ');
+        if (q.unit && typeof val === 'number') val += ' ' + q.unit;
+        if (q.id === 'valorProp') val = '$' + parseFloat(val).toLocaleString();
+        
+        html += `<tr>`;
+        html += `<td style="border-bottom: 1px solid #eee; padding: 8px; font-weight: bold; width: 45%; color: #555;">${q.label}</td>`;
+        html += `<td style="border-bottom: 1px solid #eee; padding: 8px; color: #111;">${val}</td>`;
+        html += `</tr>`;
+      }
+    });
 
-    const row = `"${d.arbolId}","${d.especie}","${d.evaluador}","${cliente}","${dt}","${lat}","${lng}","${isa}","${qtra}","${margen}","${valor}"`;
-    csvContent += row + "\n";
+    if (d.gps) {
+      html += `<tr>`;
+      html += `<td style="border-bottom: 1px solid #eee; padding: 8px; font-weight: bold; width: 45%; color: #555;">Ubicación GPS</td>`;
+      html += `<td style="border-bottom: 1px solid #eee; padding: 8px; color: #111;">${d.gps.lat.toFixed(6)}, ${d.gps.lng.toFixed(6)}</td>`;
+      html += `</tr>`;
+    }
+    
+    html += `<tr>`;
+    html += `<td style="padding: 8px; font-weight: bold; width: 45%; color: #555;">Fecha de Evaluación</td>`;
+    html += `<td style="padding: 8px; color: #111;">${dt}</td>`;
+    html += `</tr>`;
+
+    html += `</table></div>`;
   });
 
-  const encodedUri = encodeURI(csvContent);
-  const link = document.createElement("a");
-  link.setAttribute("href", encodedUri);
-  link.setAttribute("download", "evaluaciones_arbolado.csv");
-  document.body.appendChild(link);
-  link.click();
-  document.body.removeChild(link);
+  printDiv.innerHTML = html;
+  
+  // Generar la ventana de impresión
+  setTimeout(() => {
+    window.print();
+  }, 300);
 }
-window.exportToCSV = exportToCSV;
+window.exportToPDF = exportToPDF;
+
 
 function showTreeDetail(key) {
   const data = window._dbAll;
@@ -1624,25 +1538,28 @@ function showTreeDetail(key) {
   const lvlLabel = {bajo:'BAJO',moderado:'MODERADO',alto:'ALTO',extremo:'EXTREMO'};
   const dt = new Date(d.timestamp).toLocaleString('es-ES',{day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
   document.getElementById('modalTitle').textContent = `🌳 ${d.arbolId} · ${d.especie}`;
-  const ans = d.answers || {};
   
-  const fields = [
-    ['Cliente',ans.cliente || d.cliente],['Evaluador',ans.evaluador || d.evaluador],['Especie',d.especie],
-    ['Vigor',ans.vigor],['Exposición Viento',ans.exposViento],['Perfil Fallo',ans.perfilFallo],
-    ['Prob. Fallo (General)',ans.probFallo],['Consecuencias',ans.consec],
-    ['Parte Fallo',ans.parteFallo],['Ø Parte Fallo',ans.diaFallo],
-    ['Peatones/día',ans.peatones!=null?ans.peatones:null],['Vehículos/día',ans.vehiculos!=null?ans.vehiculos:null],
-    ['Valor Propiedad (USD)', ans.valorProp!=null?ans.valorProp:null],
+  // Recorre TODA la información del formulario guardado
+  const ans = d.answers || {};
+  const fields = [];
+  
+  QS.forEach(q => {
+    let val = ans[q.id];
+    if (val === undefined && d[q.id] !== undefined) val = d[q.id];
     
-    ['Diana Copa', ans.copa_diana_desc],
-    ['Diana Tronco', ans.tronco_diana_desc],
-    ['Diana Raíces', ans.raices_diana_desc]
-  ].filter(([,v]) => v !== undefined && v !== null && v !== '');
+    if (val !== undefined && val !== null && val !== '') {
+      if (Array.isArray(val)) val = val.join(', ');
+      if (q.unit && typeof val === 'number') val = val + ' ' + q.unit;
+      if (q.id === 'valorProp') val = '$' + parseFloat(val).toLocaleString();
+
+      fields.push([q.label, val]);
+    }
+  });
 
   document.getElementById('modalBody').innerHTML = `
     <div class="risk-banner ${lvlCls[d.isaLevel]||'rb-low'}">
       <div class="rb-level">${lvlLabel[d.isaLevel]||'—'}</div>
-      <div class="rb-label">Riesgo ISA TRAQ GLOBAL</div>
+      <div class="rb-label">Riesgo ISA TRAQ</div>
     </div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:12px">
       <div class="detail-item"><div class="di-label">QTRA RoH</div><div class="di-val" style="color:var(--b700)">${d.qtraStr||'—'}</div></div>
@@ -1651,12 +1568,14 @@ function showTreeDetail(key) {
       ${d.bioMargin!=null?`<div class="detail-item"><div class="di-label">Margen Estructural</div><div class="di-val" style="color:${d.bioCritical?'var(--r700)':'var(--g800)'}">${typeof d.bioMargin==='number'?d.bioMargin.toFixed(1):d.bioMargin}%</div></div>`:''}
       ${d.bioCritical?'<div class="detail-item" style="grid-column:1/-1;background:var(--r100);border-color:var(--r400)"><div class="di-label" style="color:var(--r700)">⚠️ Alerta Biomecánica</div><div class="di-val" style="color:var(--r700)">CUELLO DE BOTELLA CRÍTICO</div></div>':''}
     </div>
+    
     <div class="detail-section">
-      <div class="detail-sec-title">Datos del Árbol y Dianas</div>
+      <div class="detail-sec-title">Información Completa de Registro</div>
       <div class="detail-grid">
-        ${fields.map(([k,v])=>`<div class="detail-item"><div class="di-label">${k}</div><div class="di-val">${v}</div></div>`).join('')}
+        ${fields.map(([k,v])=>`<div class="detail-item" style="grid-column:1/-1"><div class="di-label">${k}</div><div class="di-val" style="font-weight:500">${v}</div></div>`).join('')}
       </div>
     </div>
+    
     ${d.gps?`
     <div class="detail-section">
       <div class="detail-sec-title">Ubicación GPS</div>
@@ -1676,20 +1595,12 @@ window.showTreeDetail = showTreeDetail;
 async function deleteRecord(key) {
   if (confirm("¿Estás seguro de que deseas eliminar esta evaluación de forma permanente?")) {
     try {
-      if (!window._fbRemove) throw new Error("Base de datos no conectada o sin permisos.");
-      
-      if (window._dbAll && window._dbAll[key]) {
-          delete window._dbAll[key];
-      }
-      if (window.updateFilters) window.updateFilters();
-      closeModal();
-      
+      if (!window._fbRemove) throw new Error("Función de Firebase no inicializada");
       await window._fbRemove(key);
       showNotif("🗑️ Registro eliminado");
-      
-    } catch(e) {
-      console.error("Error al eliminar:", e);
-      showNotif("⚠️ No se pudo borrar. Chequea reglas de Firebase.");
+      closeModal();
+    } catch (e) {
+      showNotif("❌ Error al eliminar: " + e.message);
     }
   }
 }
@@ -1744,7 +1655,6 @@ window.resetForm = resetForm;
 // Expose all handlers
 window.submitChoice  = submitChoice;
 window.submitMulti   = submitMulti;
-window.submitGroup   = submitGroup;
 window.submitText    = submitText;
 window.submitTextSkip= submitTextSkip;
 window.submitNumber  = submitNumber;
