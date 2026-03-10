@@ -60,6 +60,10 @@ body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:#f4f1eb;color:#
 .prog-count{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);flex-shrink:0}
 .prog-track{height:5px;background:#e5e0d5;border-radius:3px;overflow:hidden}
 .prog-fill{height:100%;background:linear-gradient(90deg,var(--g800),var(--g500));border-radius:3px;transition:width .5s ease}
+.phase-dots{display:flex;gap:5px;margin-top:6px}
+.pdot{flex:1;height:3px;border-radius:2px;background:#e5e0d5;transition:background .3s}
+.pdot.done{background:var(--g700)}
+.pdot.active{background:var(--g900)}
 /* ── FORM SCROLL ── */
 .form-scroll{flex:1;overflow-y:auto;padding:0;display:flex;flex-direction:column}
 .form-scroll::-webkit-scrollbar{width:4px}
@@ -132,6 +136,14 @@ body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:#f4f1eb;color:#
 .map-legend{display:flex;gap:10px;margin-top:7px;flex-wrap:wrap}
 .ml-item{display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600}
 .ml-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+.locate-btn {
+  position:absolute; bottom:20px; right:10px; z-index:500; 
+  width:44px; height:44px; border-radius:50%; background:#fff; 
+  border:2px solid rgba(0,0,0,0.1); box-shadow:var(--shadow-lg); 
+  display:flex; align-items:center; justify-content:center; 
+  font-size:22px; cursor:pointer; transition:transform 0.2s;
+}
+.locate-btn:active { transform: scale(0.9); }
 
 /* ── DB VIEW (FILTROS) ── */
 .db-header{background:#fff;border-bottom:1px solid var(--border);padding:12px 16px;flex-shrink:0}
@@ -301,7 +313,7 @@ body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:#f4f1eb;color:#
   <div class="view active" id="viewForm">
     <div class="form-progress">
       <div class="prog-row">
-        <div class="prog-label" id="progLabel">IDENTIFICACIÓN</div>
+        <div class="prog-label" id="progLabel">IDENTIFICACIÓN Y DIANA</div>
         <div class="prog-count" id="progCount">0 / 26</div>
       </div>
       <div class="prog-track"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
@@ -318,6 +330,21 @@ body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:#f4f1eb;color:#
       <div class="map-overlay">
         <div class="map-title">🌳 Arbolado Urbano Evaluado</div>
         <div class="map-sub" id="mapSubtitle">Cargando datos...</div>
+        
+        <!-- NUEVOS FILTROS EN EL MAPA -->
+        <div style="display:flex; gap:5px; margin-top:8px;">
+          <select id="map-f-cliente" onchange="refreshMap()" style="flex:1; padding:5px; font-size:11px; border-radius:6px; border:1px solid var(--border); outline:none;">
+            <option value="">Todos los clientes</option>
+          </select>
+          <select id="map-f-riesgo" onchange="refreshMap()" style="flex:1; padding:5px; font-size:11px; border-radius:6px; border:1px solid var(--border); outline:none;">
+            <option value="">Todos los riesgos</option>
+            <option value="extremo">Riesgo Extremo</option>
+            <option value="alto">Riesgo Alto</option>
+            <option value="moderado">Riesgo Moderado</option>
+            <option value="bajo">Riesgo Bajo</option>
+          </select>
+        </div>
+
         <div class="map-legend">
           <div class="ml-item"><div class="ml-dot" style="background:#15803d"></div>Bajo</div>
           <div class="ml-item"><div class="ml-dot" style="background:#f59e0b"></div>Moderado</div>
@@ -325,6 +352,11 @@ body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:#f4f1eb;color:#
           <div class="ml-item"><div class="ml-dot" style="background:#b91c1c"></div>Extremo</div>
         </div>
       </div>
+      
+      <!-- BOTON MI UBICACION -->
+      <button class="locate-btn" onclick="goToMyLocation()" title="Mi Ubicación">
+        🎯
+      </button>
     </div>
   </div>
 
@@ -458,7 +490,6 @@ const treesRef = ref(db,'evaluaciones');
 
 window._fbPush = d => push(treesRef, d);
 window._fbOnValue = cb => onValue(treesRef, cb);
-// Función remove agregada asincrónicamente para asegurar captura de errores
 window._fbRemove = async (key) => {
   return await remove(ref(db, 'evaluaciones/' + key));
 };
@@ -493,80 +524,107 @@ const PHASES = [
 const QS = [
   // Fase 0 — Identificación y Diana (Target)
   { id:'arbolId',     ph:0, label:'ID del árbol', type:'text+gps', ph_txt:'Ej: T-104' },
-  { id:'cliente',     ph:0, label:'Cliente', type:'text', ph_txt:'Escribe o selecciona' },
+  { id:'cliente',     ph:0, label:'Cliente / Municipio', type:'text', ph_txt:'Escribe o selecciona' },
   { id:'especie',     ph:0, label:'Especie botánica', type:'text', ph_txt:'Ej: Quercus robur' },
-  { id:'evaluador',   ph:0, label:'Asesor / Evaluador', type:'text', ph_txt:'Nombre completo' },
+  { id:'evaluador',   ph:0, label:'Nombre del Asesor', type:'text', ph_txt:'Nombre completo' },
   { id:'dap',         ph:0, label:'Diámetro nominal (DAP)', type:'number', unit:'cm', min:1 },
   { id:'altura',      ph:0, label:'Altura del árbol', type:'number', unit:'m', min:1 },
   { id:'copa',        ph:0, label:'Proyección copa (Diámetro)', type:'number', unit:'m', min:1 },
   { id:'tablaDiana',  ph:0, label:'Evaluación de Diana Principal', type:'group', fields: [
        {id:'desc_diana', label:'Descripción Diana', type:'text', ph:'Ej: Peatones en vereda'},
        {id:'tasa_ocup', label:'Tasa Ocupación', type:'select', opts:['1 · Rara','2 · Ocasional','3 · Frecuente','4 · Constante']},
-       {id:'dist_diana', label:'Ubicación', type:'select', opts:['Dentro de copa','1 x Altura','1.5 x Altura']},
-       {id:'mover_diana', label:'¿Mover diana?', type:'select', opts:['Sí','No']},
-       {id:'rest_zona', label:'¿Restringir zona?', type:'select', opts:['Sí','No']}
+       {id:'dist_diana', label:'Ubicación', type:'select', opts:['Dentro de copa','1 x Altura','1.5 x Altura', 'Fuera de la zona']},
+       {id:'mover_diana', label:'¿Es práctico mover diana?', type:'select', opts:['Sí','No']},
+       {id:'rest_zona', label:'¿Es práctico restringir zona?', type:'select', opts:['Sí','No']}
   ]},
   { id:'valorProp',   ph:0, label:'Valor propiedad expuesta (USD)', type:'number', unit:'USD', min:0, step:100, opt:true },
 
   // Fase 1 — Zona y Salud
   { id:'historial_fallo', ph:1, label:'Historial de fallos en la zona', type:'choice', opts:['Ninguno','Ramas','Tronco','Raíces'] },
-  { id:'topografia',  ph:1, label:'Topografía', type:'choice', opts:['Plano','Pendiente'] },
-  { id:'cambios_zona',ph:1, label:'Cambios en la zona', type:'multi', opts:['Cambio de cota','Limpieza','Cambio hidrología','Cortes de raíces','Ninguno'], none:'Ninguno' },
-  { id:'climatologia',ph:1, label:'Climatología adversa frecuente', type:'multi', opts:['Vientos fuertes','Hielo','Nieve','Lluvias fuertes','Ninguno'], none:'Ninguno' },
-  { id:'vigor',       ph:1, label:'Vigor del árbol', type:'choice', opts:['Bajo','Normal','Alto'] },
-  { id:'follaje',     ph:1, label:'Follaje (Estado)', type:'choice', opts:['Normal','Clorótico','Necrótico','Ninguno (estación)','Ninguno (muerte)'] },
-  { id:'tablaPlagas', ph:1, label:'Plagas y enfermedades', type:'group', fields: [
-       {id:'abiotico_sn', label:'Abiótico', type:'select', opts:['Sí','No']},
-       {id:'biotico_sn', label:'Biótico', type:'select', opts:['Sí','No']}
+  { id:'tablaTopografia', ph:1, label:'Topografía', type:'group', fields: [
+       {id:'tipo', label:'Tipo', type:'select', opts:['Plano','Pendiente']},
+       {id:'pct_pte', label:'% Pendiente', type:'number'},
+       {id:'orientacion', label:'Orientación', type:'text', ph:'Ej: Norte'}
   ]},
-  { id:'perfil_fallo',ph:1, label:'Perfil de fallos por especie', type:'multi', opts:['Ramas','Tronco','Raíces','No conocido'], none:'No conocido' },
+  { id:'cambios_zona', ph:1, label:'Cambios en la zona', type:'multi', opts:['Cambio de cota','Limpieza','Cambio hidrología','Cortes de raíces','Ninguno'], none:'Ninguno' },
+  { id:'tablaSuelo', ph:1, label:'Condiciones del suelo', type:'group', fields: [
+       {id:'vol_lim', label:'Volumen limitado (%)', type:'number'},
+       {id:'encharcado', label:'Encharcado (%)', type:'number'},
+       {id:'superficial', label:'Superficial (%)', type:'number'},
+       {id:'compactado', label:'Compactado (%)', type:'number'},
+       {id:'pavimento', label:'Pavimento sobre raíces (%)', type:'number'},
+       {id:'desc_suelo', label:'Descripción / Notas', type:'text'}
+  ]},
+  { id:'viento_dom', ph:1, label:'Dirección de vientos dominantes', type:'text', opt:true },
+  { id:'climatologia', ph:1, label:'Climatología adversa frecuente', type:'multi', opts:['Vientos fuertes','Hielo','Nieve','Lluvias fuertes','Ninguno'], none:'Ninguno' },
 
-  // Fase 2 — Factores de Carga
-  { id:'sueloCond',   ph:2, label:'Condiciones del suelo', type:'multi', opts:['Volumen limitado','Encharcado','Superficial','Compactado','Pavimento sobre raíces','Sin problemas'], none:'Sin problemas' },
+  // Fase 2 — Salud del árbol y perfil de la especie + Factores de carga
+  { id:'vigor', ph:2, label:'Vigor del árbol', type:'choice', opts:['Bajo','Normal','Alto'] },
+  { id:'tablaFollaje', ph:2, label:'Follaje', type:'group', fields: [
+       {id:'estado', label:'Estado', type:'select', opts:['Normal','Ninguno (estación)','Ninguno (muerte)']},
+       {id:'pct_normal', label:'% Normal', type:'number'},
+       {id:'pct_clorotico', label:'% Clorótico', type:'number'},
+       {id:'pct_necrotico', label:'% Necrótico', type:'number'}
+  ]},
+  { id:'tablaPlagas', ph:2, label:'Plagas y enfermedades', type:'group', fields: [
+       {id:'abiotico', label:'Abiótico (Desc)', type:'text'},
+       {id:'biotico', label:'Biótico (Desc)', type:'text'}
+  ]},
+  { id:'perfil_fallo', ph:2, label:'Perfil de fallos por especie', type:'multi', opts:['Ramas','Tronco','Raíces','No conocido'], none:'No conocido' },
   { id:'exposViento', ph:2, label:'Exposición al viento', type:'choice', opts:['Protegida','Parcial','Total','Túnel de viento'] },
-  { id:'tablaCarga',  ph:2, label:'Factores de Carga', type:'group', fields: [
-       {id:'tam_copa', label:'Tamaño copa', type:'select', opts:['Pequeño','Medio','Grande']},
+  { id:'tablaCarga', ph:2, label:'Factores de Carga', type:'group', fields: [
+       {id:'tam_copa', label:'Tamaño relativo copa', type:'select', opts:['Pequeño','Medio','Grande']},
        {id:'den_copa', label:'Densidad copa', type:'select', opts:['Escasa','Normal','Densa']},
        {id:'ram_int', label:'Ramas interiores', type:'select', opts:['Poca','Normal','Densa']},
-       {id:'trepadora', label:'Trepadora/Muérdago', type:'select', opts:['Sí','No']}
+       {id:'trepadora', label:'Trepadora/Muérdago/Musgo', type:'select', opts:['Sí','No']}
   ]},
-  { id:'cambios_carga', ph:2, label:'Cambios previstos en cargas (Texto)', type:'text', opt:true },
+  { id:'cambios_carga', ph:2, label:'Cambios recientes o previstos en cargas', type:'text', opt:true },
 
-  // Fase 3 — Copa y Ramas
-  { id:'defCopa',     ph:3, label:'Defectos en Copa y Ramas', type:'multi',
-    opts:['Copa desequilibrada','Ramas muertas','Ramas rotas','Codominancia','Uniones débiles','Fallos previos','Corteza incluida','Cavidades','Albura dañada','Grietas','Daños por rayos','Sin defectos'], none:'Sin defectos' },
-  { id:'tablaCopaDet', ph:3, label:'Detalles de Copa', type:'group', fields: [
-       {id:'lcr', label:'LCR % (Copa viva)', type:'number'},
-       {id:'pct_muertas', label:'% Ramas muertas', type:'number'}
+  // Fase 3 — Defectos en Copa y Ramas
+  { id:'defCopa', ph:3, label:'Defectos en Copa y Ramas', type:'multi', opts:['Copa desequilibrada','Ramas/ramillas muertas','Ramas rotas/colgantes','Ramas sobre extendidas','Corteza incluida','Cavidades/nidos','Codominancia','Uniones débiles','Fallos previos de ramas','Corteza muerta/pérdida','Cáncer/agallas/nudos','Albura dañada/descompuesta','Cuerpos fructíferos','Duramen descompuesto','Grietas','Daños por rayos','Crecimiento de respuesta','Sin defectos'], none:'Sin defectos' },
+  { id:'tablaCopaDet', ph:3, label:'Detalles adicionales de Copa', type:'group', fields: [
+       {id:'lcr', label:'LCR % (Porcentaje copa viva)', type:'number'},
+       {id:'pct_muertas', label:'% Ramas muertas', type:'number'},
+       {id:'diam_muertas', label:'Diám. máx ramas muertas', type:'text'},
+       {id:'num_rotas', label:'Nº Ramas rotas/colgantes', type:'number'},
+       {id:'diam_rotas', label:'Diám. máx ramas rotas', type:'text'}
   ]},
-  { id:'historial_poda', ph:3, label:'Historial de Poda', type:'multi', opts:['Limpieza','Aclareo','Reducción','Refaldado','Cortes a ras','Desmoche','Cola de León','Ninguno'], none:'Ninguno' },
+  { id:'historial_poda', ph:3, label:'Historial de Poda', type:'multi', opts:['Limpieza','Aclareo','Reducción','Refaldado','Cortes a ras','Desmoche','Cola de León','Otros','Ninguno'], none:'Ninguno' },
+  { id:'copa_preocupacion', ph:3, label:'Principal(es) preocupación(es) (Copa)', type:'text', opt:true },
   { id:'copa_cargas', ph:3, label:'Cargas adicionales (Copa)', type:'choice', opts:['Ninguna','Menor','Moderada','Significativa'] },
   { id:'copa_probFallo', ph:3, label:'Probabilidad de FALLO (Copa)', type:'choice', opts:['Improbable','Posible','Probable','Inminente'] },
   { id:'copa_probImpacto', ph:3, label:'Probabilidad de IMPACTO (Copa)', type:'choice', opts:['Muy bajo','Bajo','Medio','Alto'] },
   { id:'copa_consecuencias', ph:3, label:'Consecuencias (Copa)', type:'choice', opts:['Insignificante','Menor','Significativa','Severa'] },
 
-  // Fase 4 — Tronco
-  { id:'defTronco',   ph:4, label:'Defectos en Tronco', type:'multi',
-    opts:['Corteza muerta/perdida','Color/textura anormal','Inclinación','Estrangulamiento','Troncos codominantes','Corteza incluida','Grietas','Albura dañada','Cáncer/agallas','Rezuman savia','Cavidades','Daños por rayo','Duramen descompuesto','Cuerpos fructíferos/setas','Sin defectos'], none:'Sin defectos' },
-  { id:'tablaTroncoDet', ph:4, label:'Detalles Tronco', type:'group', fields: [
+  // Fase 4 — Defectos en Tronco
+  { id:'defTronco', ph:4, label:'Defectos en Tronco', type:'multi', opts:['Corteza muerta/perdida','Color/textura anormal de corteza','Inclinación','Estrangulamiento','Troncos codominantes','Corteza incluida','Grietas','Albura dañada/descompuesta','Cáncer/agallas/nudos','Rezuman savia','Cavidades','Daños por rayo','Duramen descompuesto','Cuerpos fructíferos/setas','Crecimiento de respuesta','Sin defectos'], none:'Sin defectos' },
+  { id:'tablaTroncoDet', ph:4, label:'Detalles adicionales Tronco', type:'group', fields: [
        {id:'cavidad_pct', label:'Cavidad % Perímetro', type:'number'},
+       {id:'cavidad_prof', label:'Profundidad cavidad', type:'number'},
        {id:'inc_grados', label:'Inclinación °', type:'number'},
        {id:'inc_corr', label:'¿Inclinación corregida?', type:'select', opts:['Sí','No']}
   ]},
+  { id:'tronco_preocupacion', ph:4, label:'Principal(es) preocupación(es) (Tronco)', type:'text', opt:true },
   { id:'tronco_cargas', ph:4, label:'Cargas adicionales (Tronco)', type:'choice', opts:['Ninguna','Menor','Moderada','Significativa'] },
   { id:'tronco_probFallo', ph:4, label:'Probabilidad de FALLO (Tronco)', type:'choice', opts:['Improbable','Posible','Probable','Inminente'] },
   { id:'tronco_probImpacto', ph:4, label:'Probabilidad de IMPACTO (Tronco)', type:'choice', opts:['Muy bajo','Bajo','Medio','Alto'] },
   { id:'tronco_consecuencias', ph:4, label:'Consecuencias (Tronco)', type:'choice', opts:['Insignificante','Menor','Significativa','Severa'] },
 
-  // Fase 5 — Raíces
-  { id:'defRaices',   ph:5, label:'Defectos en Raíces y Cuello', type:'multi',
-    opts:['Cuello enterrado','Estrangulamiento','Raíz muerta/degradada','Hongos/setas','Exudaciones','Cavidad/nido','Conicidad atípica','Levantamiento plato','Debilidad suelo','Grietas','Cortes de raíces','Sin defectos'], none:'Sin defectos' },
+  // Fase 5 — Defectos en Raíces y Cuello
+  { id:'defRaices', ph:5, label:'Defectos en Raíces y Cuello radicular', type:'multi', opts:['Cuello enterrado/no visible','Estrangulamiento','Raíz muerta/degradada','Hongos/setas','Exudaciones','Cavidad/nido','Conicidad atípica','Levantamiento del plato radicular','Debilidad de suelo','Grietas','Cortes/raíces dañadas','Crecimiento de respuesta','Sin defectos'], none:'Sin defectos' },
+  { id:'tablaRaicesDet', ph:5, label:'Detalles adicionales Raíces', type:'group', fields: [
+       {id:'cuello_prof', label:'Profundidad cuello enterrado', type:'number'},
+       {id:'cavidad_pct', label:'Cavidad % Perímetro', type:'number'},
+       {id:'cavidad_prof', label:'Profundidad cavidad', type:'number'},
+       {id:'cortes_dist', label:'Cortes: Distancia al tronco', type:'number'}
+  ]},
+  { id:'raices_preocupacion', ph:5, label:'Principal(es) preocupación(es) (Raíces)', type:'text', opt:true },
   { id:'raices_cargas', ph:5, label:'Cargas adicionales (Raíces)', type:'choice', opts:['Ninguna','Menor','Moderada','Significativa'] },
   { id:'raices_probFallo', ph:5, label:'Probabilidad de FALLO (Raíces)', type:'choice', opts:['Improbable','Posible','Probable','Inminente'] },
   { id:'raices_probImpacto', ph:5, label:'Probabilidad de IMPACTO (Raíces)', type:'choice', opts:['Muy bajo','Bajo','Medio','Alto'] },
   { id:'raices_consecuencias', ph:5, label:'Consecuencias (Raíces)', type:'choice', opts:['Insignificante','Menor','Significativa','Severa'] },
 
-  // Phase 6 — Biometría Rinntech
+  // Fase 6 — Biometría Rinntech
   { id:'H',           ph:6, label:'(Rinntech) Altura total — H', type:'number', unit:'cm', def:1500, opt:true },
   { id:'C',           ph:6, label:'(Rinntech) Altura inicio copa — C', type:'number', unit:'cm', def:800, opt:true },
   { id:'Di',          ph:6, label:'(Rinntech) Diámetro sección intacta — Di', type:'number', unit:'cm', def:40, opt:true },
@@ -591,6 +649,8 @@ let activeGpsIdx = -1;
 
 window.selectedTrees = new Set();
 window.currentFilteredEntries = [];
+
+let userLocationMarker = null;
 
 // ─── BUILD FORM ───────────────────────────────────────────
 function buildForm() {
@@ -915,7 +975,6 @@ function openMapPicker(idx) {
   
   if (!pickerMapInstance) {
     pickerMapInstance = L.map('pickerMap', { center: [-33.45, -70.65], zoom: 16 });
-    // Añadido maxZoom y maxNativeZoom para permitir acercamiento profundo
     L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
       attribution: 'Tiles &copy; Esri',
       maxZoom: 24,
@@ -1288,9 +1347,23 @@ function refreshMap() {
   mapMarkers = [];
   const data = window._dbAll;
   if (!data) { document.getElementById('mapSubtitle').textContent = 'Sin datos registrados.'; return; }
-  const entries = Object.entries(data);
-  const withGps = entries.filter(([,d]) => d.gps);
-  document.getElementById('mapSubtitle').textContent = `${entries.length} árbol(es) · ${withGps.length} con GPS`;
+  
+  // Leer filtros del mapa
+  const clientFilter = document.getElementById('map-f-cliente')?.value || '';
+  const riskFilter = document.getElementById('map-f-riesgo')?.value || '';
+
+  let entries = Object.entries(data).filter(([,d]) => d.gps);
+
+  // Aplicar filtros al mapa
+  if (clientFilter) {
+     entries = entries.filter(([,d]) => d.cliente === clientFilter || (d.answers && d.answers.cliente === clientFilter));
+  }
+  if (riskFilter) {
+     entries = entries.filter(([,d]) => d.isaLevel === riskFilter);
+  }
+
+  document.getElementById('mapSubtitle').textContent = `${entries.length} árbol(es) con GPS`;
+  
   const colors = {bajo:'#15803d',moderado:'#f59e0b',alto:'#f97316',extremo:'#b91c1c'};
   const bounds = [];
   entries.forEach(([key, d]) => {
@@ -1321,15 +1394,46 @@ function refreshMap() {
   }
 }
 
+function goToMyLocation() {
+  if (!navigator.geolocation) {
+    showNotif('Geolocalización no soportada por tu navegador.');
+    return;
+  }
+  showNotif('Buscando tu ubicación...');
+  navigator.geolocation.getCurrentPosition(pos => {
+    const lat = pos.coords.latitude;
+    const lng = pos.coords.longitude;
+    if (mapInstance) {
+      mapInstance.flyTo([lat, lng], 19);
+      if (userLocationMarker) {
+        mapInstance.removeLayer(userLocationMarker);
+      }
+      userLocationMarker = L.circleMarker([lat, lng], {
+        color: '#3b82f6',
+        fillColor: '#60a5fa',
+        fillOpacity: 0.8,
+        radius: 8,
+        weight: 3
+      }).addTo(mapInstance).bindPopup('Tu ubicación actual');
+      showNotif('Ubicación encontrada');
+    }
+  }, err => {
+    showNotif('❌ Error al obtener tu ubicación: ' + err.message);
+  }, { enableHighAccuracy: true });
+}
+window.goToMyLocation = goToMyLocation;
+
 // ─── DATABASE ─────────────────────────────────────────────
 function populateClientList() {
   const sel = document.getElementById('f-cliente');
+  const mapSel = document.getElementById('map-f-cliente');
   const datalistCliente = document.getElementById('client-datalist');
   const datalistEspecie = document.getElementById('especie-datalist');
   const datalistEvaluador = document.getElementById('evaluador-datalist');
   
   if (!window._dbAll) return;
   const current = sel ? sel.value : '';
+  const currentMap = mapSel ? mapSel.value : '';
   
   const clients = new Set();
   const especies = new Set();
@@ -1351,8 +1455,14 @@ function populateClientList() {
   
   // Poblar filtro de registros
   if (sel) {
-    sel.innerHTML = '<option value="">Todos</option>' + [...clients].sort().map(c => `<option value="${c}">${c}</option>`).join('');
+    sel.innerHTML = '<option value="">Todos los clientes</option>' + [...clients].sort().map(c => `<option value="${c}">${c}</option>`).join('');
     sel.value = current;
+  }
+
+  // Poblar filtro del mapa
+  if (mapSel) {
+    mapSel.innerHTML = '<option value="">Todos los clientes</option>' + [...clients].sort().map(c => `<option value="${c}">${c}</option>`).join('');
+    mapSel.value = currentMap;
   }
   
   // Poblar listas de autocompletado en el formulario
