@@ -1,0 +1,1658 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<title>Bosques Urbanos v4.2 · Evaluación de Riesgo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;700&family=Fraunces:opsz,wght@9..144,700;9..144,900&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"/>
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<style>
+/* ── RESET ── */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+html{font-size:15px;height:100%}
+body{font-family:'IBM Plex Sans',system-ui,sans-serif;background:#f4f1eb;color:#1a1a1a;height:100%;display:flex;flex-direction:column;overflow:hidden}
+/* ── CSS VARS ── */
+:root{
+  --g900:#0f3320;--g800:#166534;--g700:#15803d;--g500:#22c55e;--g100:#dcfce7;--g50:#f0fdf4;
+  --a900:#78350f;--a700:#b45309;--a400:#f59e0b;--a100:#fef3c7;
+  --o700:#c2410c;--o400:#f97316;--o100:#ffedd5;
+  --r700:#b91c1c;--r400:#f87171;--r100:#fee2e2;
+  --b700:#1d4ed8;--b400:#60a5fa;--b100:#dbeafe;
+  --ink:#1a1a1a;--paper:#fafaf8;--border:#d4cfc5;--muted:#6b6560;
+  --shadow:0 2px 8px rgba(0,0,0,.10);--shadow-lg:0 8px 32px rgba(0,0,0,.15);
+  --radius:12px;--nav-h:60px;
+}
+/* ── APP SHELL ── */
+.app-header{
+  background:var(--g900);padding:0 12px;
+  display:flex;align-items:center;justify-content:space-between;
+  min-height:50px;flex-shrink:0;position:relative;z-index:100;gap:8px;
+}
+.brand{display:flex;align-items:center;gap:8px;min-width:0;flex:1}
+.brand-icon{width:30px;height:30px;background:var(--g700);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;flex-shrink:0}
+.brand-text{min-width:0;overflow:hidden}
+.brand-name{font-family:'Fraunces',serif;font-size:17px;font-weight:900;color:#fff;letter-spacing:-.5px;line-height:1;white-space:nowrap}
+.brand-sub{font-size:9px;font-weight:600;letter-spacing:1.5px;text-transform:uppercase;color:#86efac;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.header-actions{display:flex;align-items:center;gap:6px;flex-shrink:0}
+.hdr-btn{padding:6px 12px;border-radius:8px;border:1.5px solid rgba(255,255,255,.25);background:rgba(255,255,255,.1);color:#fff;font-family:'IBM Plex Sans',sans-serif;font-weight:700;font-size:11px;cursor:pointer;letter-spacing:.3px;text-transform:uppercase;transition:all .15s;white-space:nowrap}
+.hdr-btn:hover{background:rgba(255,255,255,.2)}
+.hdr-btn.primary{background:var(--g700);border-color:var(--g700)}
+.conn-dot{width:8px;height:8px;border-radius:50%;background:#22c55e;box-shadow:0 0 0 3px rgba(34,197,94,.2);animation:pulse 2s infinite;flex-shrink:0}
+@keyframes pulse{0%,100%{box-shadow:0 0 0 3px rgba(34,197,94,.2)}50%{box-shadow:0 0 0 6px rgba(34,197,94,.05)}}
+.conn-dot.off{background:#ef4444;animation:none;box-shadow:none}
+/* ── BOTTOM NAV ── */
+.bottom-nav{background:#fff;border-top:2px solid var(--border);display:flex;padding:0;height:var(--nav-h);flex-shrink:0;position:relative;z-index:100}
+.nav-tab{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:3px;cursor:pointer;border:none;background:none;font-family:'IBM Plex Sans',sans-serif;font-size:10px;font-weight:600;color:var(--muted);letter-spacing:.5px;text-transform:uppercase;transition:color .15s;padding:4px 0;position:relative}
+.nav-tab.active{color:var(--g800)}
+.nav-tab.active::before{content:'';position:absolute;top:0;left:16px;right:16px;height:3px;background:var(--g800);border-radius:0 0 3px 3px}
+.nav-icon{font-size:20px;line-height:1}
+/* ── VIEWS ── */
+.view{display:none;flex:1;overflow:hidden;flex-direction:column}
+.view.active{display:flex}
+/* ── FORM PROGRESS ── */
+.form-progress{background:#fff;border-bottom:1px solid var(--border);padding:10px 14px;flex-shrink:0}
+.prog-row{display:flex;justify-content:space-between;align-items:center;margin-bottom:5px;gap:8px}
+.prog-label{font-size:10px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:var(--g800);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.prog-count{font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--muted);flex-shrink:0}
+.prog-track{height:5px;background:#e5e0d5;border-radius:3px;overflow:hidden}
+.prog-fill{height:100%;background:linear-gradient(90deg,var(--g800),var(--g500));border-radius:3px;transition:width .5s ease}
+.phase-dots{display:flex;gap:5px;margin-top:6px}
+.pdot{flex:1;height:3px;border-radius:2px;background:#e5e0d5;transition:background .3s}
+.pdot.done{background:var(--g700)}
+.pdot.active{background:var(--g900)}
+/* ── FORM SCROLL ── */
+.form-scroll{flex:1;overflow-y:auto;padding:0;display:flex;flex-direction:column}
+.form-scroll::-webkit-scrollbar{width:4px}
+.form-scroll::-webkit-scrollbar-thumb{background:#ddd;border-radius:2px}
+/* ── PHASE HEADER ── */
+.phase-hdr{padding:14px 16px 10px;border-bottom:1px solid var(--border);background:#fafaf8;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:10}
+.phase-hdr-icon{width:36px;height:36px;border-radius:9px;background:var(--g900);color:#fff;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.phase-hdr-title{font-family:'Fraunces',serif;font-size:15px;font-weight:700;color:var(--ink)}
+.phase-hdr-desc{font-size:10px;font-weight:600;color:var(--muted);margin-top:1px;text-transform:uppercase;letter-spacing:.5px}
+/* ── Q BLOCKS ── */
+.q-block{padding:16px;border-bottom:1px solid #f0ebe0;transition:background .2s;position:relative}
+.q-block.locked{opacity:.4;pointer-events:none}
+.q-block.current{background:#fafbff;border-left:4px solid var(--g800)}
+.q-block.answered{background:#fff}
+.q-num{font-family:'IBM Plex Mono',monospace;font-size:10px;font-weight:700;color:#aaa;letter-spacing:1px;margin-bottom:5px}
+.q-label{font-size:15px;font-weight:700;color:var(--ink);line-height:1.35;margin-bottom:10px}
+.q-note{font-size:11px;font-weight:600;color:var(--muted);margin-bottom:10px;background:#f5f1eb;padding:7px 10px;border-radius:7px;border-left:3px solid var(--border);line-height:1.4}
+/* ── ANSWER DISPLAY ── */
+.answer-display{display:flex;align-items:center;justify-content:space-between;gap:10px}
+.answer-value{font-size:14px;font-weight:700;color:var(--ink);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.edit-btn{font-size:11px;font-weight:700;color:var(--b700);background:var(--b100);border:1.5px solid #c8d9ff;border-radius:7px;padding:5px 12px;cursor:pointer;white-space:nowrap;flex-shrink:0}
+/* ── INPUT WIDGETS ── */
+.choices-wrap{display:flex;flex-wrap:wrap;gap:7px}
+.choice-opt{font-size:13px;font-weight:600;padding:9px 15px;border-radius:8px;border:1.5px solid var(--border);background:#fff;color:var(--ink);cursor:pointer;transition:all .15s;line-height:1.2;font-family:'IBM Plex Sans',sans-serif}
+.choice-opt:hover{border-color:var(--g700);background:var(--g50)}
+.choice-opt.selected{border-color:var(--g900);background:var(--g900);color:#fff}
+.choice-opt.multi-sel{border-color:var(--b700);background:var(--b100);color:var(--b700)}
+.confirm-row{display:flex;align-items:center;gap:8px;margin-top:10px;flex-wrap:wrap}
+.confirm-btn{font-weight:700;font-size:13px;padding:10px 20px;border-radius:8px;border:2px solid var(--g900);background:var(--g900);color:#fff;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;transition:all .15s}
+.confirm-btn:hover{background:var(--g800)}
+.skip-btn{font-weight:600;font-size:12px;padding:9px 14px;border-radius:8px;border:1.5px solid var(--border);background:#fff;color:var(--muted);cursor:pointer;font-family:'IBM Plex Sans',sans-serif}
+.inp-row{display:flex;gap:8px;align-items:center}
+.field-inp{flex:1;font-family:'IBM Plex Sans',sans-serif;font-weight:600;font-size:14px;padding:10px 12px;border:1.5px solid var(--border);border-radius:8px;background:#fff;color:var(--ink);outline:none;transition:border-color .15s;max-width:200px;-webkit-appearance:none;appearance:none}
+.field-inp:focus{border-color:var(--g700)}
+.field-inp::placeholder{color:#bbb;font-weight:400}
+.inp-unit{font-size:12px;font-weight:700;color:var(--muted);white-space:nowrap}
+.gps-btn{padding:9px 14px;border-radius:8px;border:1.5px solid var(--g700);background:#fff;color:var(--g800);font-family:'IBM Plex Sans',sans-serif;font-weight:700;font-size:12px;cursor:pointer;display:flex;align-items:center;gap:5px;transition:all .15s;white-space:nowrap;flex-shrink:0}
+.gps-btn:hover{background:var(--g50)}
+.gps-btn.captured{background:var(--g800);color:#fff;border-color:var(--g800)}
+.gps-preview{display:none;margin-top:8px;padding:7px 10px;background:var(--g50);border:1px solid var(--g700);border-radius:7px;font-family:'IBM Plex Mono',monospace;font-size:11px;color:var(--g800)}
+.gps-preview.show{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+/* ── RESULTS CARD (at bottom of form) ── */
+.results-wrap{padding:16px;background:#fff;border-top:2px solid var(--border);margin-top:auto}
+.results-top{display:flex;gap:10px;margin-bottom:10px}
+.r-card{flex:1;background:linear-gradient(135deg,var(--g900),#0a2214);border-radius:10px;padding:12px;color:#fff;min-width:0}
+.r-card-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#86efac;margin-bottom:4px}
+.r-card-val{font-family:'Fraunces',serif;font-size:22px;font-weight:900;color:#fff;line-height:1}
+.r-card-sub{font-size:10px;color:rgba(255,255,255,.6);margin-top:3px;font-weight:500}
+.r-bio{background:#fff;border:1.5px solid var(--border);border-radius:10px;padding:12px}
+.r-bio-label{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:8px}
+.r-bio-row{display:flex;justify-content:space-between;font-size:12px;padding:3px 0;border-bottom:1px solid #f5f0e8}
+.r-bio-row:last-child{border-bottom:none}
+.r-bio-key{color:var(--muted);font-weight:600}
+.r-bio-val{font-family:'IBM Plex Mono',monospace;font-weight:700}
+.rv-ok{color:var(--g700)}.rv-warn{color:var(--a700)}.rv-bad{color:var(--r700)}.rv-neu{color:var(--b700)}
+.bio-bar-wrap{height:6px;background:#f0ebe0;border-radius:3px;overflow:hidden;margin:7px 0}
+.bio-bar{height:100%;border-radius:3px;transition:width .6s ease}
+.crit-alert{display:none;padding:7px 10px;background:var(--r100);border:1px solid var(--r400);border-radius:7px;font-size:11px;font-weight:700;color:var(--r700);text-align:center;margin-top:6px;animation:blink 1.5s infinite}
+.crit-alert.on{display:block}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.6}}
+.recs-wrap{margin-top:10px}
+.recs-title{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--g800);margin-bottom:6px}
+.rec-item{display:flex;gap:7px;align-items:flex-start;font-size:11px;font-weight:500;line-height:1.4;padding:4px 0;border-bottom:1px solid #f5f0e8;color:var(--ink)}
+.rec-item:last-child{border-bottom:none}
+.rec-dot{width:6px;height:6px;border-radius:50%;flex-shrink:0;margin-top:3px}
+.save-btn{width:100%;padding:14px;border-radius:10px;border:3px solid var(--g900);background:var(--g900);color:#fff;font-family:'IBM Plex Sans',sans-serif;font-weight:700;font-size:14px;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:all .2s;margin-top:12px}
+.save-btn:hover:not(:disabled){background:var(--g800)}
+.save-btn:disabled{opacity:.35;cursor:not-allowed}
+.save-btn.saved{background:var(--g700);border-color:var(--g700)}
+/* ── QTRA display ── */
+.qtra-frac{font-family:'IBM Plex Mono',monospace;font-size:20px;font-weight:700;line-height:1}
+/* ── MAP VIEW ── */
+#leafletMap{width:100%;height:100%}
+.map-overlay{position:absolute;top:10px;left:10px;right:10px;z-index:500;background:rgba(255,255,255,.97);border-radius:10px;padding:10px 14px;box-shadow:var(--shadow-lg);border:1px solid var(--border)}
+.map-title{font-family:'Fraunces',serif;font-size:14px;font-weight:900;color:var(--g900)}
+.map-sub{font-size:10px;color:var(--muted);margin-top:1px}
+.map-legend{display:flex;gap:10px;margin-top:7px;flex-wrap:wrap}
+.ml-item{display:flex;align-items:center;gap:4px;font-size:10px;font-weight:600}
+.ml-dot{width:10px;height:10px;border-radius:50%;flex-shrink:0}
+
+/* ── DB VIEW (FILTROS) ── */
+.db-header{background:#fff;border-bottom:1px solid var(--border);padding:12px 16px;flex-shrink:0}
+.db-header-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:7px;gap:8px}
+.db-title{font-family:'Fraunces',serif;font-size:17px;font-weight:900;color:var(--g900)}
+.db-count{font-size:11px;color:var(--muted);font-weight:600;white-space:nowrap}
+.db-search{width:100%;padding:9px 12px;border:1.5px solid var(--border);border-radius:8px;font-family:'IBM Plex Sans',sans-serif;font-size:13px;outline:none;transition:border-color .15s}
+.db-search:focus{border-color:var(--g700)}
+.db-scroll{flex:1;overflow-y:auto;padding:12px 14px;display:flex;flex-direction:column;gap:8px}
+.db-empty{text-align:center;padding:60px 20px;color:var(--muted);font-weight:600;font-size:13px}
+/* Tree cards */
+.tree-card{background:#fff;border:1.5px solid var(--border);border-radius:var(--radius);overflow:hidden;box-shadow:var(--shadow);cursor:pointer;transition:all .15s}
+.tree-card:hover{border-color:var(--g700);transform:translateY(-1px);box-shadow:var(--shadow-lg)}
+.tc-head{padding:11px 13px 8px;border-bottom:1px solid #f0ebe0}
+.tc-id{font-family:'IBM Plex Mono',monospace;font-size:11px;font-weight:700;color:var(--b700)}
+.tc-species{font-family:'Fraunces',serif;font-size:14px;font-weight:700;color:var(--ink);margin:2px 0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tc-evaluator{font-size:11px;color:var(--muted)}
+.tc-body{padding:9px 13px}
+.tc-pills{display:flex;gap:5px;flex-wrap:wrap;margin-bottom:7px}
+.tc-pill{font-size:9px;font-weight:700;padding:3px 8px;border-radius:10px;border:1.5px solid;letter-spacing:.5px;text-transform:uppercase}
+.tp-low{color:var(--g800);border-color:#86efac;background:var(--g100)}
+.tp-mod{color:var(--a900);border-color:#fde68a;background:var(--a100)}
+.tp-high{color:var(--o700);border-color:#fed7aa;background:var(--o100)}
+.tp-ext{color:var(--r700);border-color:#fecaca;background:var(--r100)}
+.tc-meta{display:flex;justify-content:space-between;align-items:center;font-size:10px;color:var(--muted)}
+.tc-gps{display:flex;align-items:center;gap:4px;font-family:'IBM Plex Mono',monospace;font-size:10px;color:var(--g800)}
+/* ── DETAIL MODAL ── */
+.modal-overlay{position:fixed;inset:0;z-index:1000;background:rgba(0,0,0,.5);backdrop-filter:blur(4px);display:none;flex-direction:column;animation:fadeIn .2s ease}
+.modal-overlay.open{display:flex}
+@keyframes fadeIn{from{opacity:0}to{opacity:1}}
+.modal-inner{background:#fff;border-radius:20px 20px 0 0;max-height:90vh;overflow-y:auto;margin-top:auto;animation:slideUp .3s cubic-bezier(.16,1,.3,1)}
+@keyframes slideUp{from{transform:translateY(100%)}to{transform:translateY(0)}}
+.modal-drag{width:40px;height:4px;border-radius:2px;background:#ddd;margin:12px auto 0}
+.modal-head{padding:14px 18px;border-bottom:1px solid var(--border);display:flex;align-items:center;justify-content:space-between;gap:10px}
+.modal-title{font-family:'Fraunces',serif;font-size:16px;font-weight:900;color:var(--ink);min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.modal-close{width:32px;height:32px;border-radius:50%;background:#f4f1eb;border:none;font-size:16px;cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.modal-body{padding:14px 18px 32px}
+.detail-section{margin-bottom:14px}
+.detail-sec-title{font-size:10px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--g800);margin-bottom:7px;padding-bottom:4px;border-bottom:2px solid var(--g100)}
+.detail-grid{display:grid;grid-template-columns:1fr 1fr;gap:5px}
+.detail-item{background:#fafaf8;border-radius:7px;padding:7px 9px;border:1px solid var(--border)}
+.di-label{font-size:9px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.5px;margin-bottom:2px}
+.di-val{font-size:13px;font-weight:600;color:var(--ink);word-break:break-word}
+.risk-banner{border-radius:10px;padding:12px 14px;text-align:center;margin:10px 0;border:3px solid}
+.rb-low{background:var(--g100);border-color:var(--g700);color:var(--g900)}
+.rb-mod{background:var(--a100);border-color:var(--a400);color:var(--a900)}
+.rb-high{background:var(--o100);border-color:var(--o400);color:var(--o700)}
+.rb-ext{background:var(--r100);border-color:var(--r400);color:var(--r700);animation:blink 1.5s infinite}
+.rb-level{font-family:'Fraunces',serif;font-size:26px;font-weight:900}
+.rb-label{font-size:11px;font-weight:700;letter-spacing:1px;text-transform:uppercase;margin-top:2px}
+/* ── COMPLETE SCREEN ── */
+.complete-screen{position:fixed;inset:0;z-index:500;background:linear-gradient(135deg,var(--g900),#0a2214);display:none;flex-direction:column;overflow-y:auto}
+.complete-screen.open{display:flex}
+.cs-header{padding:16px 16px 8px;display:flex;justify-content:space-between;align-items:flex-start;gap:10px;flex-wrap:nowrap}
+.cs-title{font-family:'Fraunces',serif;font-size:22px;font-weight:900;color:#fff;line-height:1.1;min-width:0}
+.cs-sub{font-size:11px;color:#86efac;margin-top:3px;font-weight:600;letter-spacing:1px;text-transform:uppercase}
+.cs-close{padding:8px 14px;border:1.5px solid rgba(255,255,255,.25);border-radius:8px;background:rgba(255,255,255,.1);color:#fff;font-weight:700;font-size:11px;cursor:pointer;font-family:'IBM Plex Sans',sans-serif;white-space:nowrap;flex-shrink:0;align-self:center}
+.cs-body{padding:12px 16px 40px;flex:1}
+.cs-card{background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:12px;padding:12px 14px;margin-bottom:10px}
+.cs-card-title{font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:#86efac;margin-bottom:9px}
+.risk-display{text-align:center;padding:16px}
+.rd-level{font-family:'Fraunces',serif;font-size:44px;font-weight:900;transition:all .3s}
+.rd-low{color:#4ade80}.rd-mod{color:#fbbf24}.rd-high{color:#fb923c}.rd-ext{color:#f87171;animation:blink 1.5s infinite}
+.rd-label{font-size:12px;font-weight:600;color:rgba(255,255,255,.7);letter-spacing:2px;text-transform:uppercase;margin-top:3px}
+.cs-metrics{display:grid;grid-template-columns:1fr 1fr;gap:7px;margin-top:9px}
+.cs-metric{background:rgba(255,255,255,.08);border-radius:8px;padding:9px 11px}
+.csm-label{font-size:9px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:rgba(255,255,255,.5);margin-bottom:3px}
+.csm-val{font-family:'IBM Plex Mono',monospace;font-size:15px;font-weight:700;color:#fff}
+.csm-ok{color:#4ade80}.csm-warn{color:#fbbf24}.csm-bad{color:#f87171}
+.rinn-verdict{text-align:center;padding:13px;background:rgba(255,255,255,.05);border-radius:10px;margin-top:9px}
+.rv-main{font-family:'Fraunces',serif;font-size:18px;font-weight:900;margin-bottom:5px}
+.rv-detail{font-size:11px;color:rgba(255,255,255,.7);line-height:1.5}
+.cs-recs{margin-top:7px}
+.cs-rec-item{display:flex;gap:7px;align-items:flex-start;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:11px;font-weight:500;color:rgba(255,255,255,.85);line-height:1.4}
+.cs-rec-item:last-child{border-bottom:none}
+/* ── NOTIFICATION ── */
+.notif{position:fixed;top:20px;left:50%;transform:translateX(-50%) translateY(-100px);background:var(--g900);color:#fff;border-radius:10px;padding:11px 18px;font-size:13px;font-weight:600;z-index:3000;transition:transform .3s cubic-bezier(.16,1,.3,1);display:flex;align-items:center;gap:7px;box-shadow:var(--shadow-lg);max-width:90vw}
+.notif.show{transform:translateX(-50%) translateY(0)}
+/* ── RANGE SLIDER ── */
+input[type=range]{-webkit-appearance:none;appearance:none;width:100%;height:6px;border-radius:3px;background:linear-gradient(90deg,var(--g700) 0%,var(--g700) var(--pct,0%),#e5e0d5 var(--pct,0%));outline:none}
+input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;appearance:none;width:20px;height:20px;border-radius:50%;background:var(--g800);border:3px solid #fff;box-shadow:0 2px 6px rgba(0,0,0,.2);cursor:pointer}
+
+/* ── MAP PICKER MODAL (SATELITAL) ── */
+#pickerMap { width: 100%; height: 100%; border-radius: 0 0 20px 20px; }
+.map-picker-crosshair {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -100%);
+  z-index: 1000;
+  pointer-events: none;
+  font-size: 32px;
+  text-shadow: 0 2px 4px rgba(0,0,0,0.3);
+}
+
+/* ── RESPONSIVE ── */
+@media(max-width:380px){
+  .detail-grid,.cs-metrics{grid-template-columns:1fr}
+  .brand-sub{display:none}
+  .hdr-btn{padding:5px 10px;font-size:10px}
+}
+@media(max-width:320px){
+  .brand-name{font-size:15px}
+}
+::-webkit-scrollbar{width:4px;height:4px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:#ccc;border-radius:2px}
+</style>
+</head>
+<body>
+<!-- HEADER -->
+<header class="app-header">
+  <div class="brand">
+    <div class="brand-icon">🌳</div>
+    <div class="brand-text">
+      <div class="brand-name">Bosques Urbanos <span style="font-size:11px;font-weight:400;opacity:.6">v4.2</span></div>
+      <div class="brand-sub">Riesgo de Arbolado · ISA·APO·QTRA</div>
+    </div>
+  </div>
+  <div class="header-actions">
+    <div class="conn-dot off" id="connDot"></div>
+    <button class="hdr-btn primary" onclick="resetForm()">+ Nueva</button>
+  </div>
+</header>
+
+<!-- VIEWS CONTAINER -->
+<div style="flex:1;overflow:hidden;display:flex;flex-direction:column">
+
+  <!-- ─── VIEW: FORMULARIO Q&A ─── -->
+  <div class="view active" id="viewForm">
+    <div class="form-progress">
+      <div class="prog-row">
+        <div class="prog-label" id="progLabel">IDENTIFICACIÓN</div>
+        <div class="prog-count" id="progCount">0 / 26</div>
+      </div>
+      <div class="prog-track"><div class="prog-fill" id="progFill" style="width:0%"></div></div>
+      <div class="phase-dots">
+        <div class="pdot" id="phd0"></div>
+        <div class="pdot" id="phd1"></div>
+        <div class="pdot" id="phd2"></div>
+        <div class="pdot" id="phd3"></div>
+        <div class="pdot" id="phd4"></div>
+        <div class="pdot" id="phd5"></div>
+        <div class="pdot" id="phd6"></div>
+        <div class="pdot" id="phd7"></div>
+      </div>
+    </div>
+    <div class="form-scroll" id="formScroll">
+      <!-- Q&A blocks injected by JS -->
+    </div>
+  </div>
+
+  <!-- ─── VIEW: MAPA ─── -->
+  <div class="view" id="viewMap">
+    <div style="flex:1;position:relative">
+      <div id="leafletMap"></div>
+      <div class="map-overlay">
+        <div class="map-title">🌳 Arbolado Urbano Evaluado</div>
+        <div class="map-sub" id="mapSubtitle">Cargando datos...</div>
+        <div class="map-legend">
+          <div class="ml-item"><div class="ml-dot" style="background:#15803d"></div>Bajo</div>
+          <div class="ml-item"><div class="ml-dot" style="background:#f59e0b"></div>Moderado</div>
+          <div class="ml-item"><div class="ml-dot" style="background:#f97316"></div>Alto</div>
+          <div class="ml-item"><div class="ml-dot" style="background:#b91c1c"></div>Extremo</div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ─── VIEW: BASE DE DATOS ─── -->
+  <div class="view" id="viewDB">
+    <div class="db-header">
+      <div class="db-header-top">
+        <div class="db-title">Registros</div>
+        <div style="display:flex; gap:8px; align-items:center;">
+          <div class="db-count" id="dbCount">— evaluaciones</div>
+          <button onclick="exportToCSV()" style="padding:6px 12px; background:var(--g800); color:#fff; border:none; border-radius:8px; cursor:pointer; font-weight:700; font-size:11px; font-family:'IBM Plex Sans',sans-serif;">📥 CSV</button>
+        </div>
+      </div>
+      <input type="search" class="db-search" placeholder="🔍 Buscar por ID, especie, evaluador..." oninput="updateFilters()" id="dbSearch">
+      
+      <!-- ── FILTROS DE DISCRIMINACIÓN ── -->
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-top:10px">
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <label style="font-size:8px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Cliente</label>
+          <select id="f-cliente" onchange="updateFilters()" style="width:100%;padding:6px;font-size:11px;font-weight:600;border:1.2px solid var(--border);border-radius:6px;background:#f9f9f9;outline:none;font-family:'IBM Plex Sans',sans-serif">
+            <option value="">Todos</option>
+          </select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px">
+          <label style="font-size:8px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Diana (Ocupación)</label>
+          <select id="f-diana" onchange="updateFilters()" style="width:100%;padding:6px;font-size:11px;font-weight:600;border:1.2px solid var(--border);border-radius:6px;background:#f9f9f9;outline:none;font-family:'IBM Plex Sans',sans-serif">
+            <option value="">Cualquiera</option>
+            <option value="4">4 · Constante</option>
+            <option value="3">3 · Frecuente</option>
+            <option value="2">2 · Ocasional</option>
+            <option value="1">1 · Rara</option>
+          </select>
+        </div>
+        <div style="display:flex;flex-direction:column;gap:3px;grid-column: 1 / -1;">
+          <label style="font-size:8px;font-weight:800;letter-spacing:1px;text-transform:uppercase;color:var(--muted)">Valor Diana (USD)</label>
+          <select id="f-valor" onchange="updateFilters()" style="width:100%;padding:6px;font-size:11px;font-weight:600;border:1.2px solid var(--border);border-radius:6px;background:#f9f9f9;outline:none;font-family:'IBM Plex Sans',sans-serif">
+            <option value="0">Cualquier valor</option>
+            <option value="1000">> $1,000 USD</option>
+            <option value="10000">> $10,000 USD</option>
+            <option value="100000">> $100,000 USD</option>
+            <option value="500000">> $500,000 USD</option>
+          </select>
+        </div>
+      </div>
+    </div>
+    <div class="db-scroll" id="dbScroll">
+      <div class="db-empty">🌱 Sin evaluaciones guardadas aún.</div>
+    </div>
+  </div>
+</div>
+
+<!-- BOTTOM NAV -->
+<nav class="bottom-nav">
+  <button class="nav-tab active" id="tab-form" onclick="switchTab('form')">
+    <div class="nav-icon">📋</div><div>Formulario</div>
+  </button>
+  <button class="nav-tab" id="tab-map" onclick="switchTab('map')">
+    <div class="nav-icon">🗺️</div><div>Mapa</div>
+  </button>
+  <button class="nav-tab" id="tab-db" onclick="switchTab('db')">
+    <div class="nav-icon">🗂️</div><div>Registros</div>
+  </button>
+</nav>
+
+<!-- ─── MAP PICKER MODAL (SATELITAL) ─── -->
+<div class="modal-overlay" id="mapPickerModal" style="z-index: 2500;">
+  <div class="modal-inner" style="height:80vh; display:flex; flex-direction:column; border-radius: 20px 20px 0 0;">
+    <div class="modal-head">
+      <div class="modal-title">Seleccionar Ubicación</div>
+      <button class="modal-close" onclick="closeMapPicker()">✕</button>
+    </div>
+    <div style="flex:1; position:relative; background:#e5e5e5;">
+      <div id="pickerMap"></div>
+      <div class="map-picker-crosshair">📍</div>
+    </div>
+    <div style="padding:15px; background:#fff;">
+      <button class="save-btn" onclick="confirmMapPicker()" style="margin:0; background:var(--b700); border-color:var(--b700);">
+        ✅ Confirmar Ubicación Exacta
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ─── COMPLETE / RESULTS SCREEN ─── -->
+<div class="complete-screen" id="completeScreen">
+  <div class="cs-header">
+    <div>
+      <div class="cs-title">Evaluación<br>Completada</div>
+      <div class="cs-sub">Informe · Bosques Urbanos v4.2</div>
+    </div>
+    <button class="cs-close" onclick="closeComplete()">✕ Cerrar</button>
+  </div>
+  <div class="cs-body" id="csBody"></div>
+</div>
+
+<!-- ─── TREE DETAIL MODAL ─── -->
+<div class="modal-overlay" id="detailModal">
+  <div class="modal-inner">
+    <div class="modal-drag"></div>
+    <div class="modal-head">
+      <div class="modal-title" id="modalTitle">Detalle del Árbol</div>
+      <button class="modal-close" onclick="closeModal()">✕</button>
+    </div>
+    <div class="modal-body" id="modalBody"></div>
+  </div>
+</div>
+
+<!-- NOTIFICATION -->
+<div class="notif" id="notif">✅ Guardado</div>
+
+<!-- FIREBASE SDK -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-database.js";
+const app = initializeApp({
+  apiKey:"AIzaSyBC5fz0bq_L1woj4Q3vSuCHKL3CswzLhxw",
+  authDomain:"appp-1ed52.firebaseapp.com",
+  databaseURL:"https://appp-1ed52-default-rtdb.firebaseio.com",
+  projectId:"appp-1ed52",
+  storageBucket:"appp-1ed52.firebasestorage.app",
+  messagingSenderId:"377421785269",
+  appId:"1:377421785269:web:48088a6486262e237576fc"
+});
+const db = getDatabase(app);
+const treesRef = ref(db,'evaluaciones');
+window._fbPush = d => push(treesRef, d);
+window._fbOnValue = cb => onValue(treesRef, cb);
+window._fbRemove = key => remove(ref(db, 'evaluaciones/' + key));
+const dot = document.getElementById('connDot');
+if (dot) dot.classList.remove('off');
+window._fbOnValue(snap => {
+  window._dbAll = snap.val();
+  if (window.populateClientList) window.populateClientList();
+  if (window.updateFilters) window.updateFilters();
+  else if (window.renderDB) window.renderDB(window._dbAll, document.getElementById('dbSearch')?.value || '');
+  if (typeof refreshMap === 'function') refreshMap();
+});
+</script>
+
+<script>
+/* ═══════════════════════════════════════════════════════════
+   Bosques Urbanos — Q&A Wizard + ISA TRAQ + Rinntech APO + QTRA v5
+═══════════════════════════════════════════════════════════ */
+
+// ─── Q&A SCHEMA ──────────────────────────────────────────
+const PHASES = [
+  { label:'IDENTIFICACIÓN', icon:'🌿', desc:'Datos básicos del árbol y entorno' },
+  { label:'PERFIL Y SALUD', icon:'🩺', desc:'Vigor, follaje y patologías' },
+  { label:'FACTOR CARGA',   icon:'🌬️', desc:'Suelo, viento y exposición' },
+  { label:'COPA Y RAMAS',   icon:'🌳', desc:'Defectos y diana en copa' },
+  { label:'TRONCO',         icon:'🪵', desc:'Defectos y diana en tronco' },
+  { label:'RAÍCES',         icon:'🌱', desc:'Defectos y diana radicular' },
+  { label:'RIESGO FINAL',   icon:'⚠️', desc:'QTRA y Riesgo ISA global' },
+  { label:'BIOMETRÍA APO',  icon:'🔬', desc:'Medidas para análisis Rinntech' },
+];
+
+const QS = [
+  // Phase 0 — Identificación
+  { id:'arbolId',     ph:0, label:'ID del árbol', type:'text+gps', ph_txt:'Ej: T-104', note:'Se capturarán las coordenadas GPS junto con el ID.' },
+  { id:'especie',     ph:0, label:'Especie botánica', type:'text', ph_txt:'Ej: Quercus robur' },
+  { id:'evaluador',   ph:0, label:'Nombre del evaluador', type:'text', ph_txt:'Nombre completo' },
+  { id:'cliente',     ph:0, label:'Cliente / Municipio', type:'text', ph_txt:'Organismo o empresa', opt:true },
+
+  // Phase 1 — Perfil y Salud
+  { id:'vigor',       ph:1, label:'Vigor general del árbol', type:'choice', opts:['💪 Alto','🌿 Normal','⚠️ Bajo'] },
+  { id:'perfilFallo', ph:1, label:'Perfil de fallo más probable para esta especie', type:'choice', opts:['🌿 Ramas','🪵 Tronco','🌱 Raíces'] },
+  { id:'tablaFollaje', ph:1, label:'Evaluación de Follaje', type:'group', fields: [
+       {id:'fol_norm', label:'% Follaje Normal', type:'number', ph:'0-100'},
+       {id:'fol_cloro', label:'% Follaje Clorótico', type:'number', ph:'0-100'},
+       {id:'fol_necro', label:'% Follaje Necrótico', type:'number', ph:'0-100'}
+  ]},
+  { id:'tablaPlagas', ph:1, label:'Plagas y Enfermedades', type:'group', fields: [
+       {id:'abiotico_sn', label:'Abiótico', type:'select', opts:['Sí','No']},
+       {id:'abiotico_ag', label:'Agente abiótico', type:'text', ph:'Especifique...'},
+       {id:'biotico_sn', label:'Biótico', type:'select', opts:['Sí','No']},
+       {id:'biotico_ag', label:'Agente biótico', type:'text', ph:'Especifique...'}
+  ]},
+
+  // Phase 2 — Factor de Carga
+  { id:'sueloCond',   ph:2, label:'Condiciones del suelo (elige todas las que apliquen)', type:'multi',
+    opts:['💧 Encharcado','✂️ Raíces cortadas / zanjas','🧱 Compactado','🚧 Pavimento sobre raíces','✅ Sin problemas'], none:'✅ Sin problemas' },
+  { id:'exposViento', ph:2, label:'Exposición al viento del árbol', type:'choice', opts:['🌬️ Protegida','🌀 Parcial','💨 Total','🌪️ Túnel de viento'] },
+  { id:'tablaCarga', ph:2, label:'Factores de Carga Adicionales', type:'group', fields: [
+       {id:'tam_copa', label:'Tamaño relativo copa', type:'select', opts:['Pequeño','Medio','Grande']},
+       {id:'den_copa', label:'Densidad copa', type:'select', opts:['Escasa','Normal','Densa']},
+       {id:'ram_int', label:'Ramas interiores', type:'select', opts:['Poca','Normal','Densa']},
+       {id:'cambios', label:'Cambios previstos carga', type:'text', ph:'Observaciones...'}
+  ]},
+
+  // Phase 3 — Copa y Ramas
+  { id:'defCopa',     ph:3, label:'Defectos en copa y ramas', type:'multi',
+    opts:['Copa desequilibrada','Ramas muertas','Corteza incluida','Cavidades / nidos','Codominancia','Uniones débiles','Fallos previos de ramas','Cuerpos fructíferos','Sin defectos'], none:'Sin defectos' },
+  { id:'tablaDefCopa', ph:3, label:'Análisis Visual de Copa', type:'group', fields: [
+       {id:'alt_corteza', label:'Altura corteza inc (cm)', type:'number'},
+       {id:'ram_rotas', label:'Ramas rotas/colgantes', type:'select', opts:['Sí','No']},
+       {id:'num_ramas', label:'Núm. ramas rotas', type:'number'},
+       {id:'diam_max', label:'Diámetro Máximo (cm)', type:'number'},
+       {id:'uniones', label:'Uniones débiles', type:'select', opts:['Sí','No']},
+       {id:'cavidades', label:'Cavidades', type:'select', opts:['Sí','No']}
+  ]},
+  { id:'copa_diana_dist',  ph:3, label:'(DIANA COPA) Distancia del blanco más cercano', type:'choice',
+    opts:['Dentro de la copa','1× Altura del árbol','1.5× Altura del árbol','Fuera de la zona de caída'] },
+  { id:'copa_diana_ocup',    ph:3, label:'(DIANA COPA) Tasa de ocupación (ISA)', type:'choice',
+    opts:['1 · Rara','2 · Ocasional','3 · Frecuente','4 · Constante'] },
+  { id:'copa_prob_impacto', ph:3, label:'(DIANA COPA) Probabilidad de Impacto sobre Diana', type:'choice', opts:['MUY BAJO','BAJO','MEDIO','ALTO'] },
+
+  // Phase 4 — Tronco
+  { id:'defTronco',   ph:4, label:'Defectos en el tronco', type:'multi',
+    opts:['Corteza muerta','Grietas','Exudaciones / hongos','Inclinación','Duramen descompuesto','Cuerpos fructíferos / setas','Cavidad / nido','Sin defectos'], none:'Sin defectos' },
+  { id:'tablaDefTronco', ph:4, label:'Análisis Visual del Tronco', type:'group', fields: [
+       {id:'grad_inc', label:'Grado inclinación (°)', type:'number'},
+       {id:'inc_corr', label:'Inclinación corregida', type:'select', opts:['Sí','No']},
+       {id:'esp_pared', label:'Espesor pared res. (cm)', type:'number'},
+       {id:'crec_resp', label:'Crecimiento respuesta', type:'select', opts:['Sí','No']},
+       {id:'preocupacion', label:'Preocupación principal', type:'text'}
+  ]},
+  { id:'tronco_diana_dist',  ph:4, label:'(DIANA TRONCO) Distancia del blanco más cercano', type:'choice',
+    opts:['Dentro de la copa','1× Altura del árbol','1.5× Altura del árbol','Fuera de la zona de caída'] },
+  { id:'tronco_diana_ocup',    ph:4, label:'(DIANA TRONCO) Tasa de ocupación (ISA)', type:'choice',
+    opts:['1 · Rara','2 · Ocasional','3 · Frecuente','4 · Constante'] },
+  { id:'tronco_prob_impacto', ph:4, label:'(DIANA TRONCO) Probabilidad de Impacto sobre Diana', type:'choice', opts:['MUY BAJO','BAJO','MEDIO','ALTO'] },
+
+  // Phase 5 — Raíces
+  { id:'defRaices',   ph:5, label:'Defectos en raíces y cuello radicular', type:'multi',
+    opts:['Levantamiento del plato radicular','Hongos / setas en base','Debilidad del suelo','Cortes / raíces dañadas','Sin defectos'], none:'Sin defectos' },
+  { id:'tablaDefRaices', ph:5, label:'Análisis Visual de Raíces', type:'group', fields: [
+       {id:'exudacion', label:'Exudación', type:'select', opts:['Sí','No']},
+       {id:'cavidades', label:'Cavidades', type:'select', opts:['Sí','No']},
+       {id:'perimetro', label:'% Perímetro afectado', type:'number'},
+       {id:'prof_cav', label:'Prof. cavidad (cm)', type:'number'},
+       {id:'grietas', label:'Grietas', type:'select', opts:['Sí','No']},
+       {id:'cortes', label:'Cortes de raíces', type:'select', opts:['Sí','No']},
+       {id:'dist_tronco', label:'Distancia tronco (cm)', type:'number'},
+       {id:'levantamiento', label:'Levantamiento red', type:'select', opts:['Sí','No']}
+  ]},
+  { id:'raices_diana_dist',  ph:5, label:'(DIANA RAÍCES) Distancia del blanco más cercano', type:'choice',
+    opts:['Dentro de la copa','1× Altura del árbol','1.5× Altura del árbol','Fuera de la zona de caída'] },
+  { id:'raices_diana_ocup',    ph:5, label:'(DIANA RAÍCES) Tasa de ocupación (ISA)', type:'choice',
+    opts:['1 · Rara','2 · Ocasional','3 · Frecuente','4 · Constante'] },
+  { id:'raices_prob_impacto', ph:5, label:'(DIANA RAÍCES) Probabilidad de Impacto sobre Diana', type:'choice', opts:['MUY BAJO','BAJO','MEDIO','ALTO'] },
+
+  // Phase 6 — QTRA y Riesgo ISA
+  { id:'peatones',    ph:6, label:'Peatones bajo el árbol al día (QTRA global)', type:'number', unit:'peat./día', min:0, step:1, def:0 },
+  { id:'vehiculos',   ph:6, label:'Vehículos que pasan bajo el árbol al día (QTRA global)', type:'number', unit:'veh./día', min:0, step:1, def:0 },
+  { id:'valorProp',   ph:6, label:'Valor de propiedad estática expuesta (USD)', type:'number', unit:'USD', min:0, step:1000, def:0, opt:true },
+  { id:'parteFallo',  ph:6, label:'¿Qué parte tiene mayor probabilidad de fallar?', type:'choice',
+    opts:['Rama principal','Tronco principal','Raíces / Volcado','Árbol completo'] },
+  { id:'diaFallo',    ph:6, label:'Diámetro estimado de la parte que podría fallar', type:'choice',
+    opts:['< 25 mm','25 – 100 mm','110 – 250 mm','> 260 mm'] },
+  { id:'probFallo',   ph:6, label:'Probabilidad visual de FALLO en los próximos 12 meses', type:'choice',
+    opts:['🟢 Improbable','🟡 Posible','🟠 Probable','🔴 Inminente'] },
+  { id:'consec',      ph:6, label:'CONSECUENCIAS del fallo sobre la diana (ISA)', type:'choice',
+    opts:['⚪ Insignificante','🟡 Menor','🟠 Significativa','🔴 Severo'] },
+
+  // Phase 7 — Biometría Rinntech
+  { id:'H',           ph:7, label:'Altura total del árbol — H', type:'number', unit:'cm', min:50, step:10, def:1500,
+    note:'Hi (sección de referencia) se fija internamente a 130 cm (altura de pecho estándar).' },
+  { id:'C',           ph:7, label:'Altura de inicio de la copa — C', type:'number', unit:'cm', min:0, step:10, def:800 },
+  { id:'Di',          ph:7, label:'Diámetro de sección INTACTA a 130 cm — Di', type:'number', unit:'cm', min:2, step:.5, def:40 },
+  { id:'Hd',          ph:7, label:'Altura del defecto / cuello de botella — Hd', type:'number', unit:'cm', min:0, step:1, def:10 },
+  { id:'Dd',          ph:7, label:'Diámetro exterior en la zona del defecto — Dd', type:'number', unit:'cm', min:2, step:.5, def:50 },
+  { id:'tActual',     ph:7, label:'Espesor medido de pared residual — t_actual', type:'number', unit:'cm', min:0, step:.5, def:0,
+    note:'Medido con resistógrafo o tomógrafo. Ingresa 0 si no dispones del dato.', opt:true },
+  { id:'topologia',   ph:7, label:'Topología del defecto en la sección', type:'choice',
+    opts:['⭕ Cavidad central','🔴 Pudrición exterior','💥 Apertura en tronco'] },
+];
+
+const TOTAL = QS.length;
+
+// ─── STATE ────────────────────────────────────────────────
+let answers = {};
+let gpsCoords = null;
+let _multiSel = {};
+let assessmentDone = false;
+let mapInstance = null;
+let mapMarkers = [];
+
+let pickerMapInstance = null;
+let activeGpsIdx = -1;
+
+// ─── BUILD FORM ───────────────────────────────────────────
+function buildForm() {
+  const scroll = document.getElementById('formScroll');
+  if (!scroll) return;
+  scroll.innerHTML = '';
+
+  let lastPh = -1;
+  QS.forEach((q, idx) => {
+    if (q.ph !== lastPh) {
+      const ph = PHASES[q.ph];
+      const hdr = document.createElement('div');
+      hdr.className = 'phase-hdr';
+      hdr.id = 'phase-hdr-' + q.ph;
+      hdr.innerHTML = `
+        <div class="phase-hdr-icon">${ph.icon}</div>
+        <div>
+          <div class="phase-hdr-title">${ph.label}</div>
+          <div class="phase-hdr-desc">${ph.desc}</div>
+        </div>`;
+      scroll.appendChild(hdr);
+      lastPh = q.ph;
+    }
+    const block = document.createElement('div');
+    block.className = 'q-block locked';
+    block.id = 'qblock-' + idx;
+    block.innerHTML = buildQHTML(q, idx);
+    scroll.appendChild(block);
+  });
+
+  // Results section at bottom
+  const resWrap = document.createElement('div');
+  resWrap.className = 'results-wrap';
+  resWrap.id = 'resultsWrap';
+  resWrap.innerHTML = buildResultsHTML();
+  scroll.appendChild(resWrap);
+
+  unlockUpTo(0);
+  updateProgress();
+}
+
+function buildQHTML(q, idx) {
+  const val = answers[q.id];
+  const isAnswered = val !== undefined && val !== null && val !== '';
+  let inputHTML = '';
+  if (isAnswered) {
+    let displayVal = val;
+    if (typeof val === 'object' && !Array.isArray(val)) {
+        displayVal = q.fields.map(f => `${f.label.split(' ')[0]}: ${val[f.id]||'-'}`).join(' | ');
+    } else if (Array.isArray(val)) {
+        displayVal = val.join(', ');
+    } else {
+        displayVal = val + (q.unit ? ' ' + q.unit : '');
+    }
+
+    inputHTML = `
+      <div class="answer-display">
+        <div class="answer-value">✅ ${displayVal}</div>
+        <button class="edit-btn" onclick="editQuestion(${idx})">✏️ Editar</button>
+      </div>`;
+  } else {
+    inputHTML = buildWidget(q, idx);
+  }
+  return `
+    <div class="q-num">Q${idx + 1} / ${TOTAL} · FASE ${q.ph + 1}</div>
+    <div class="q-label">${q.label}</div>
+    ${q.note ? `<div class="q-note">${q.note}</div>` : ''}
+    <div id="widget-${idx}">${inputHTML}</div>`;
+}
+
+function buildWidget(q, idx) {
+  if (q.type === 'choice') {
+    const opts = q.opts.map(o =>
+      `<button class="choice-opt" onclick="submitChoice(${idx},'${encodeURIComponent(o)}')">${o}</button>`
+    ).join('');
+    return `<div class="choices-wrap">${opts}</div>`;
+  }
+  if (q.type === 'multi') {
+    const opts = q.opts.map(o =>
+      `<button class="choice-opt" id="mopt-${idx}-${encodeURIComponent(o)}" onclick="toggleMulti(${idx},'${encodeURIComponent(o)}')">${o}</button>`
+    ).join('');
+    return `
+      <div class="choices-wrap" id="mgrid-${idx}">${opts}</div>
+      <div class="confirm-row">
+        <button class="confirm-btn" onclick="submitMulti(${idx})">Confirmar →</button>
+      </div>`;
+  }
+  if (q.type === 'group') {
+    const gAns = answers[q.id] || {};
+    const fieldsHtml = q.fields.map(f => {
+      let input = '';
+      if (f.type === 'select') {
+        input = `<select id="gf-${q.id}-${f.id}" class="field-inp" style="width:100%;margin-top:4px;padding:8px;">
+          <option value="">Seleccione...</option>
+          ${f.opts.map(o => `<option value="${o}" ${gAns[f.id]===o?'selected':''}>${o}</option>`).join('')}
+        </select>`;
+      } else {
+        input = `<input type="${f.type}" id="gf-${q.id}-${f.id}" value="${gAns[f.id]||''}" class="field-inp" style="width:100%;margin-top:4px;padding:8px;" placeholder="${f.ph||''}">`;
+      }
+      return `<div style="margin-bottom:10px;"><div style="font-size:11px;font-weight:700;color:var(--muted);">${f.label}</div>${input}</div>`;
+    }).join('');
+
+    return `
+      <div style="background:#fafaf8; border:1px solid var(--border); border-radius:8px; padding:12px; margin-bottom:10px; display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+        ${fieldsHtml}
+      </div>
+      <div class="confirm-row">
+        <button class="confirm-btn" onclick="submitGroup(${idx})">Confirmar Tabla →</button>
+      </div>
+    `;
+  }
+  if (q.type === 'text' || q.type === 'text+gps') {
+    const isGps = q.type === 'text+gps';
+    return `
+      <div class="inp-row">
+        <input class="field-inp" type="text" placeholder="${q.ph_txt||''}" id="tinp-${idx}"
+          style="max-width:none;flex:1"
+          onkeydown="if(event.key==='Enter') submitText(${idx})">
+        <button class="confirm-btn" onclick="submitText(${idx})">→</button>
+      </div>
+      ${isGps ? `
+        <div style="display:flex;gap:8px;margin-top:8px">
+          <button class="gps-btn" id="gpsbtn-${idx}" style="flex:1;justify-content:center" onclick="captureGPS(${idx})">📍 Auto GPS</button>
+          <button class="gps-btn" style="flex:1;justify-content:center;background:#e0f2fe;color:#1d4ed8;border-color:#93c5fd" onclick="openMapPicker(${idx})">🗺️ Satélite Manual</button>
+        </div>
+        <div class="gps-preview" id="gpsprev-${idx}">📍 <span id="gpscoord-${idx}"></span></div>
+      ` : ''}
+      ${q.opt ? `<div class="confirm-row" style="margin-top:8px"><button class="skip-btn" onclick="submitTextSkip(${idx})">Omitir</button></div>` : ''}`;
+  }
+  if (q.type === 'number') {
+    return `
+      <div class="inp-row">
+        <input class="field-inp" type="number" min="${q.min??0}" step="${q.step??1}"
+          value="${q.def??''}" placeholder="${q.def??0}" id="ninp-${idx}"
+          onkeydown="if(event.key==='Enter') submitNumber(${idx})">
+        <span class="inp-unit">${q.unit||''}</span>
+        ${q.opt ? `<button class="skip-btn" onclick="submitNumber(${idx},true)">Omitir</button>` : ''}
+        <button class="confirm-btn" onclick="submitNumber(${idx})">→</button>
+      </div>`;
+  }
+  return '';
+}
+
+function buildResultsHTML() {
+  return `
+    <div style="font-size:9px;font-weight:700;letter-spacing:2px;text-transform:uppercase;color:var(--muted);margin-bottom:9px">Resultados en tiempo real · ISA · APO · QTRA</div>
+    <div class="results-top">
+      <div class="r-card">
+        <div class="r-card-label">ISA TRAQ</div>
+        <div class="r-card-val" id="r-isaLevel">—</div>
+        <div class="r-card-sub" id="r-isaSub">Esperando datos...</div>
+        <div id="r-override" style="display:none;margin-top:5px;font-size:9px;font-weight:700;color:#fbbf24;background:rgba(251,191,36,.15);padding:3px 7px;border-radius:5px">⚡ Override biomecánico</div>
+      </div>
+      <div class="r-card" style="background:linear-gradient(135deg,#1e3a5f,#0c1e33)">
+        <div class="r-card-label">QTRA v5</div>
+        <div class="qtra-frac r-card-val" id="r-qtraFrac" style="font-size:18px">1/∞</div>
+        <div class="r-card-sub" id="r-alarp">Esperando datos...</div>
+      </div>
+    </div>
+    <div class="r-bio">
+      <div class="r-bio-label">Rinntech APO — Biomecánica</div>
+      <div class="r-bio-row"><span class="r-bio-key">t_req (mínimo)</span><span class="r-bio-val rv-neu" id="r-treq">—</span></div>
+      <div class="r-bio-row"><span class="r-bio-key">t_actual (medido)</span><span class="r-bio-val rv-neu" id="r-tact">—</span></div>
+      <div class="r-bio-row"><span class="r-bio-key">Margen estructural</span><span class="r-bio-val rv-neu" id="r-margin">—</span></div>
+      <div class="bio-bar-wrap"><div class="bio-bar" id="r-bioBar" style="width:0%;background:var(--g500)"></div></div>
+      <div class="crit-alert" id="r-crit">⚠️ CUELLO DE BOTELLA CRÍTICO — Riesgo de colapso estructural</div>
+    </div>
+    <div class="recs-wrap">
+      <div class="recs-title">💡 Recomendaciones</div>
+      <div id="r-recs"><div class="rec-item"><div class="rec-dot" style="background:#ccc"></div>Complete el cuestionario para obtener recomendaciones.</div></div>
+    </div>
+    <button class="save-btn" id="saveBtn" disabled onclick="saveAssessment()">
+      💾 Guardar Evaluación en la Nube
+    </button>`;
+}
+
+// ─── MULTI TOGGLE ─────────────────────────────────────────
+function toggleMulti(idx, encVal) {
+  const val = decodeURIComponent(encVal);
+  const q = QS[idx];
+  if (!_multiSel[idx]) _multiSel[idx] = new Set();
+  const sel = _multiSel[idx];
+  const btn = document.getElementById('mopt-' + idx + '-' + encVal);
+  if (val === q.none) {
+    sel.clear(); sel.add(val);
+    document.querySelectorAll('#mgrid-' + idx + ' .choice-opt').forEach(b => b.classList.remove('multi-sel'));
+    btn.classList.add('multi-sel');
+  } else {
+    const noneEnc = encodeURIComponent(q.none);
+    const noneBtn = document.getElementById('mopt-' + idx + '-' + noneEnc);
+    if (noneBtn) noneBtn.classList.remove('multi-sel');
+    sel.delete(q.none);
+    if (sel.has(val)) { sel.delete(val); btn.classList.remove('multi-sel'); }
+    else { sel.add(val); btn.classList.add('multi-sel'); }
+  }
+}
+
+// ─── SUBMIT FUNCTIONS ─────────────────────────────────────
+function submitChoice(idx, encVal) {
+  answers[QS[idx].id] = decodeURIComponent(encVal);
+  afterSubmit(idx);
+}
+function submitMulti(idx) {
+  const q = QS[idx];
+  const sel = _multiSel[idx];
+  answers[q.id] = (sel && sel.size > 0) ? [...sel] : [q.none];
+  delete _multiSel[idx];
+  afterSubmit(idx);
+}
+function submitGroup(idx) {
+  const q = QS[idx];
+  let ans = {};
+  q.fields.forEach(f => {
+    const el = document.getElementById(`gf-${q.id}-${f.id}`);
+    if(el) ans[f.id] = el.value;
+  });
+  answers[q.id] = ans;
+  afterSubmit(idx);
+}
+function submitText(idx) {
+  const inp = document.getElementById('tinp-' + idx);
+  const val = inp ? inp.value.trim() : '';
+  if (!val) return;
+  answers[QS[idx].id] = val;
+  afterSubmit(idx);
+}
+function submitTextSkip(idx) {
+  answers[QS[idx].id] = '—';
+  afterSubmit(idx);
+}
+function submitNumber(idx, skip=false) {
+  const q = QS[idx];
+  const inp = document.getElementById('ninp-' + idx);
+  const val = skip ? (q.def ?? 0) : (parseFloat(inp?.value) ?? 0) || 0;
+  answers[q.id] = val;
+  afterSubmit(idx);
+}
+
+function afterSubmit(idx) {
+  const block = document.getElementById('qblock-' + idx);
+  block.className = 'q-block answered';
+  block.innerHTML = buildQHTML(QS[idx], idx);
+  const next = idx + 1;
+  if (next < TOTAL) {
+    unlockUpTo(next);
+    scrollToBlock(next);
+  } else {
+    assessmentDone = true;
+    const sb = document.getElementById('saveBtn');
+    if (sb) sb.disabled = false;
+    showNotif('✅ Evaluación completa');
+    setTimeout(() => showCompleteScreen(), 600);
+  }
+  updateProgress();
+  computeAll();
+}
+
+function editQuestion(idx) {
+  delete answers[QS[idx].id];
+  for (let i = idx + 1; i < TOTAL; i++) {
+    delete answers[QS[i].id];
+    const b = document.getElementById('qblock-' + i);
+    if (b) b.className = 'q-block locked';
+  }
+  assessmentDone = false;
+  const sb = document.getElementById('saveBtn');
+  if (sb) sb.disabled = true;
+  const block = document.getElementById('qblock-' + idx);
+  block.className = 'q-block current';
+  block.innerHTML = buildQHTML(QS[idx], idx);
+  scrollToBlock(idx);
+  updateProgress();
+  computeAll();
+}
+
+function unlockUpTo(idx) {
+  for (let i = 0; i < TOTAL; i++) {
+    const b = document.getElementById('qblock-' + i);
+    if (!b) continue;
+    if (i < idx && answers[QS[i].id] !== undefined) {
+      b.className = 'q-block answered';
+      b.innerHTML = buildQHTML(QS[i], i);
+    } else if (i === idx) {
+      b.className = 'q-block current';
+      b.innerHTML = buildQHTML(QS[i], i);
+    } else {
+      b.className = 'q-block locked';
+    }
+  }
+}
+
+function scrollToBlock(idx) {
+  setTimeout(() => {
+    const b = document.getElementById('qblock-' + idx);
+    if (b) b.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  }, 80);
+}
+
+// ─── GPS & MAP PICKER ─────────────────────────────────────
+function captureGPS(idx) {
+  const btn = document.getElementById('gpsbtn-' + idx);
+  if (!navigator.geolocation) { showNotif('GPS no disponible'); return; }
+  if (btn) { btn.textContent = '⏳ Localizando...'; btn.style.opacity = '.7'; }
+  navigator.geolocation.getCurrentPosition(
+    pos => {
+      gpsCoords = { lat: pos.coords.latitude, lng: pos.coords.longitude, acc: pos.coords.accuracy };
+      if (btn) { btn.textContent = '📍 Auto GPS ✓'; btn.className = 'gps-btn captured'; btn.style.opacity = '1'; }
+      const prev = document.getElementById('gpsprev-' + idx);
+      const coord = document.getElementById('gpscoord-' + idx);
+      if (prev && coord) {
+        coord.innerHTML = `${gpsCoords.lat.toFixed(5)}, ${gpsCoords.lng.toFixed(5)} (±${Math.round(gpsCoords.acc)}m)
+          <a href="https://maps.google.com/?q=${gpsCoords.lat},${gpsCoords.lng}" target="_blank" style="color:var(--b700);font-weight:700;font-size:10px;margin-left:6px">Ver mapa</a>`;
+        prev.classList.add('show');
+      }
+      showNotif('📍 GPS capturado');
+    },
+    err => {
+      if (btn) { btn.textContent = '❌ Error GPS'; btn.style.opacity = '1'; }
+      showNotif('Error GPS: ' + err.message);
+    },
+    { enableHighAccuracy: true, timeout: 15000, maximumAge: 0 }
+  );
+}
+window.captureGPS = captureGPS;
+
+function openMapPicker(idx) {
+  activeGpsIdx = idx;
+  document.getElementById('mapPickerModal').classList.add('open');
+  
+  if (!pickerMapInstance) {
+    pickerMapInstance = L.map('pickerMap', { center: [-33.45, -70.65], zoom: 16 });
+    L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+      attribution: 'Tiles &copy; Esri', maxZoom: 19
+    }).addTo(pickerMapInstance);
+  }
+  
+  setTimeout(() => {
+    pickerMapInstance.invalidateSize();
+    if (gpsCoords) {
+      pickerMapInstance.setView([gpsCoords.lat, gpsCoords.lng], 18);
+    } else if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(pos => {
+        pickerMapInstance.setView([pos.coords.latitude, pos.coords.longitude], 18);
+      }, err => console.log(err), { enableHighAccuracy: true });
+    }
+  }, 250);
+}
+window.openMapPicker = openMapPicker;
+
+function closeMapPicker() {
+  document.getElementById('mapPickerModal').classList.remove('open');
+}
+window.closeMapPicker = closeMapPicker;
+
+function confirmMapPicker() {
+  const center = pickerMapInstance.getCenter();
+  gpsCoords = { lat: center.lat, lng: center.lng, acc: 0 }; 
+  
+  const prev = document.getElementById('gpsprev-' + activeGpsIdx);
+  const coord = document.getElementById('gpscoord-' + activeGpsIdx);
+  if (prev && coord) {
+    coord.innerHTML = `${gpsCoords.lat.toFixed(5)}, ${gpsCoords.lng.toFixed(5)} (Manual)
+      <a href="https://maps.google.com/?q=${gpsCoords.lat},${gpsCoords.lng}" target="_blank" style="color:var(--b700);font-weight:700;font-size:10px;margin-left:6px">Ver mapa</a>`;
+    prev.classList.add('show');
+  }
+  showNotif('📍 Ubicación manual guardada');
+  closeMapPicker();
+}
+window.confirmMapPicker = confirmMapPicker;
+
+// ─── PROGRESS ─────────────────────────────────────────────
+function updateProgress() {
+  const answered = Object.keys(answers).length;
+  const pct = Math.round((answered / TOTAL) * 100);
+  const fill = document.getElementById('progFill');
+  if (fill) fill.style.width = pct + '%';
+  const cnt = document.getElementById('progCount');
+  if (cnt) cnt.textContent = answered + ' / ' + TOTAL;
+  const lastAns = QS.findIndex(q => answers[q.id] === undefined);
+  const curQ = Math.max(0, lastAns < 0 ? TOTAL - 1 : lastAns);
+  const phase = QS[Math.min(curQ, TOTAL - 1)].ph;
+  const lbl = document.getElementById('progLabel');
+  if (lbl) lbl.textContent = PHASES[phase].label;
+  for (let i = 0; i < 8; i++) {
+    const d = document.getElementById('phd' + i);
+    if (d) d.className = 'pdot' + (i < phase ? ' done' : i === phase ? ' active' : '');
+  }
+}
+
+// ─── ALGORITHMS ───────────────────────────────────────────
+function get(id) { return answers[id]; }
+
+function calcBio() {
+  const H  = parseFloat(get('H'));
+  const C  = parseFloat(get('C'));
+  const Hi = 130;
+  const Di = parseFloat(get('Di'));
+  const Hd = parseFloat(get('Hd'));
+  const Dd = parseFloat(get('Dd'));
+  const tAct = parseFloat(get('tActual'));
+  const topo = get('topologia') || '';
+
+  if ([H,C,Di,Hd,Dd].some(isNaN) || H<=0 || Di<=0 || Dd<=0) return { valid:false, isUnsafe:false };
+  if (Hd >= Hi || Hi >= H) return { valid:false, isUnsafe:false };
+
+  const Hf = (H + C) / 2;
+  if (Hf <= Hi || Hf <= Hd) return { valid:false, isUnsafe:false };
+
+  const ratio = (Hf - Hd) / (Hf - Hi);
+  let inner = Math.pow(Dd, 4) - Math.pow(Di, 3) * Dd * ratio;
+  if (inner < 0) inner = 0;
+  let t_req = 0.5 * (Dd - Math.pow(inner, 0.25));
+
+  if (topo.includes('exterior') || topo.includes('Exterior')) t_req = t_req / 0.70;
+  else if (topo.includes('Apertura') || topo.includes('apertura')) t_req = t_req / 0.50;
+
+  t_req = Math.max(0, t_req);
+  const margin = (!isNaN(tAct) && tAct > 0 && t_req > 0) ? (tAct / t_req) * 100 : null;
+  const isUnsafe = margin !== null && margin < 100;
+  return { valid:true, isUnsafe, margin, t_req, Hf, ratio, tAct: isNaN(tAct) ? 0 : tAct };
+}
+
+function calcISA(isUnsafe, margin) {
+  // 1. Obtener qué parte tiene mayor probabilidad de fallar (del Q6)
+  const parte = get('parteFallo') || '';
+  
+  // 2. Extraer el impacto correspondiente a esa parte elegida
+  let impactoStr = 'muy bajo';
+  if (parte.includes('Rama')) impactoStr = get('copa_prob_impacto') || 'muy bajo';
+  else if (parte.includes('Tronco')) impactoStr = get('tronco_prob_impacto') || 'muy bajo';
+  else if (parte.includes('Raíces')) impactoStr = get('raices_prob_impacto') || 'muy bajo';
+  else {
+    // Si es "Árbol completo", buscamos el peor caso entre las 3 dianas
+    const impacts = [get('copa_prob_impacto'), get('tronco_prob_impacto'), get('raices_prob_impacto')].map(i => (i||'').toLowerCase());
+    if (impacts.includes('alto')) impactoStr = 'alto';
+    else if (impacts.includes('medio')) impactoStr = 'medio';
+    else if (impacts.includes('bajo')) impactoStr = 'bajo';
+  }
+
+  impactoStr = impactoStr.toLowerCase();
+  const impactoKey = impactoStr.includes('alto') ? 'alto'
+    : impactoStr.includes('medio') ? 'medio'
+    : impactoStr.includes('muy') ? 'muy_bajo'
+    : 'bajo';
+
+  // 3. Probabilidad de Fallo general elegida
+  const pf = (get('probFallo') || '').toLowerCase();
+  let probFallo = pf.includes('inminente') ? 'inminente'
+    : (pf.includes('probable') && !pf.includes('im')) ? 'probable'
+    : pf.includes('posible') ? 'posible'
+    : 'improbable';
+
+  let override = false;
+  if (isUnsafe) {
+    override = true;
+    probFallo = (margin !== null && margin < 50) ? 'inminente' : 'probable';
+  }
+
+  // MATRIZ 1: Probabilidad de Fallo e Impacto
+  const m1 = {
+    inminente:  {muy_bajo:'improbable', bajo:'algo_probable', medio:'probable',      alto:'muy_probable'},
+    probable:   {muy_bajo:'improbable', bajo:'improbable',    medio:'algo_probable', alto:'probable'},
+    posible:    {muy_bajo:'improbable', bajo:'improbable',    medio:'improbable',    alto:'algo_probable'},
+    improbable: {muy_bajo:'improbable', bajo:'improbable',    medio:'improbable',    alto:'improbable'}
+  };
+  const probComb = m1[probFallo]?.[impactoKey] || 'improbable';
+
+  // 4. Consecuencias
+  const cs = (get('consec') || '').toLowerCase();
+  const cons = cs.includes('sever') ? 'severo'
+    : cs.includes('signif') ? 'significativa'
+    : cs.includes('menor') ? 'menor' : 'insignificante';
+
+  // MATRIZ 2: Categorización del Riesgo
+  const m2 = {
+    muy_probable:  {insignificante:'bajo', menor:'moderado', significativa:'alto',     severo:'extremo'},
+    probable:      {insignificante:'bajo', menor:'moderado', significativa:'alto',     severo:'alto'},
+    algo_probable: {insignificante:'bajo', menor:'bajo',     significativa:'moderado', severo:'moderado'},
+    improbable:    {insignificante:'bajo', menor:'bajo',     significativa:'bajo',     severo:'bajo'}
+  };
+  
+  return { level: m2[probComb]?.[cons] || 'bajo', probComb, override };
+}
+
+function calcQTRA(isUnsafe, margin) {
+  const peat = parseFloat(get('peatones')) || 0;
+  const veh  = parseFloat(get('vehiculos')) || 0;
+  const prop = parseFloat(get('valorProp')) || 0;
+  const VOSL = 2600000;
+
+  const tP  = (peat * 5) / 86400;
+  const tV  = (veh * 1.6 * 0.1 * 0.36) / 86400;
+  const tPr = prop / VOSL;
+  const target = Math.min(1, Math.max(tP, tV, tPr, 0));
+
+  const ds = get('diaFallo') || '';
+  const size = ds.includes('260')||ds.includes('>') ? 0.5
+    : ds.includes('110') ? 0.027
+    : ds.includes('25') ? 0.002 : 0;
+
+  let pof;
+  if (isUnsafe) {
+    pof = (margin !== null && margin < 50) ? 0.5 : 0.1;
+  } else {
+    const ps = (get('probFallo')||'').toLowerCase();
+    pof = ps.includes('inminente') ? 0.1
+      : (ps.includes('probable')&&!ps.includes('im')) ? 0.00316
+      : ps.includes('posible') ? 0.0003 : 0.00001;
+  }
+
+  const roH = target * size * pof;
+  if (roH <= 0 || size === 0)
+    return { str:'1/∞', denom:Infinity, status:'AMPLIAMENTE ACEPTABLE', cls:'rv-ok', target, size, pof };
+  const denom = Math.round(1 / roH);
+  const status = denom<=1000 ? 'INACEPTABLE' : denom<=1000000 ? 'TOLERABLE (ALARP)' : 'AMPLIAMENTE ACEPTABLE';
+  const cls = denom<=1000 ? 'rv-bad' : denom<=1000000 ? 'rv-warn' : 'rv-ok';
+  return { str:'1/'+denom.toLocaleString('es-ES'), denom, status, cls, target, size, pof };
+}
+
+function computeAll() {
+  const bio  = calcBio();
+  const isa  = calcISA(bio.isUnsafe, bio.margin);
+  const qtra = calcQTRA(bio.isUnsafe, bio.margin);
+  renderResults(bio, isa, qtra);
+}
+
+function renderResults(bio, isa, qtra) {
+  const lm = {bajo:'BAJO',moderado:'MODERADO',alto:'ALTO',extremo:'EXTREMO'};
+  const pl = {improbable:'Improbable',algo_probable:'Algo Probable',probable:'Probable',muy_probable:'Muy Probable'};
+  const lc = {bajo:'#4ade80',moderado:'#fbbf24',alto:'#fb923c',extremo:'#f87171'};
+
+  const isaEl = document.getElementById('r-isaLevel');
+  if (isaEl) {
+    isaEl.textContent = lm[isa.level] || '—';
+    isaEl.style.color = lc[isa.level] || '#fff';
+    const sub = document.getElementById('r-isaSub');
+    if (sub) sub.textContent = pl[isa.probComb] || '—';
+    const ov = document.getElementById('r-override');
+    if (ov) ov.style.display = isa.override ? 'block' : 'none';
+  }
+
+  const qEl = document.getElementById('r-qtraFrac');
+  if (qEl) {
+    qEl.textContent = qtra.str;
+    qEl.className = 'qtra-frac r-card-val ' + qtra.cls;
+    const alarp = document.getElementById('r-alarp');
+    if (alarp) alarp.textContent = qtra.status;
+  }
+
+  if (bio.valid) {
+    const treqEl = document.getElementById('r-treq');
+    if (treqEl) { treqEl.textContent = bio.t_req.toFixed(2) + ' cm'; treqEl.className = 'r-bio-val rv-warn'; }
+    const tactEl = document.getElementById('r-tact');
+    if (tactEl) {
+      tactEl.textContent = bio.tAct > 0 ? bio.tAct.toFixed(2) + ' cm' : '—';
+      if (bio.margin !== null) tactEl.className = 'r-bio-val ' + (bio.isUnsafe ? 'rv-bad' : 'rv-ok');
+    }
+    const mEl = document.getElementById('r-margin');
+    if (mEl && bio.margin !== null) {
+      mEl.textContent = bio.margin.toFixed(1) + '%';
+      mEl.className = 'r-bio-val ' + (bio.margin >= 130 ? 'rv-ok' : bio.margin >= 100 ? 'rv-warn' : 'rv-bad');
+    }
+    const barEl = document.getElementById('r-bioBar');
+    if (barEl && bio.margin !== null) {
+      barEl.style.width = Math.min(100, bio.margin / 2) + '%';
+      barEl.style.background = bio.margin >= 130 ? 'linear-gradient(90deg,#22c55e,#4ade80)'
+        : bio.margin >= 100 ? 'linear-gradient(90deg,#f59e0b,#fbbf24)'
+        : 'linear-gradient(90deg,#dc2626,#f87171)';
+    }
+    const crit = document.getElementById('r-crit');
+    if (crit) crit.className = 'crit-alert' + (bio.isUnsafe ? ' on' : '');
+  }
+
+  const recs = buildRecs(isa, bio, qtra);
+  const recList = document.getElementById('r-recs');
+  if (recList) recList.innerHTML = recs.map(r =>
+    `<div class="rec-item"><div class="rec-dot" style="background:${r.c}"></div><span>${r.t}</span></div>`
+  ).join('');
+
+  const saveBtn = document.getElementById('saveBtn');
+  if (saveBtn && !assessmentDone) saveBtn.disabled = Object.keys(answers).length < 10;
+}
+
+function buildRecs(isa, bio, qtra) {
+  const recs = [];
+  if (isa.level==='extremo') recs.push({c:'#f87171',t:'⛔ EXTREMO: Restricción inmediata de acceso y evaluación de emergencia urgente.'});
+  else if (isa.level==='alto') recs.push({c:'#fb923c',t:'⚠️ ALTO: Intervención programada en < 3 meses. Señalización preventiva.'});
+  else if (isa.level==='moderado') recs.push({c:'#fbbf24',t:'🟡 MODERADO: Monitoreo regular. Plan de manejo a 6–12 meses.'});
+  else recs.push({c:'#4ade80',t:'✅ BAJO: Inspección rutinaria en el intervalo habitual.'});
+  if (bio.isUnsafe) recs.push({c:'#f87171',t:`⚡ Rinntech crítico: t_req=${bio.t_req?.toFixed(2)} cm > t_actual. Inspección urgente.`});
+  const dr = get('defRaices');
+  if (dr && (Array.isArray(dr)?dr:[dr]).some(v=>v.includes('Levantamiento')))
+    recs.push({c:'#fb923c',t:'🌱 Levantamiento del plato radicular: evaluar riesgo de volcado.'});
+  const sc = get('sueloCond');
+  if (sc && (Array.isArray(sc)?sc:[sc]).some(v=>v.includes('Raíces')))
+    recs.push({c:'#fbbf24',t:'Raíces cortadas / zanjas: evaluar estabilidad radicular.'});
+  if (qtra.denom <= 1000) recs.push({c:'#f87171',t:'QTRA INACEPTABLE: intervención económicamente justificada.'});
+  else if (qtra.denom <= 1000000) recs.push({c:'#fbbf24',t:'QTRA ALARP: comparar costo de intervención con riesgo de daño.'});
+  return recs;
+}
+
+// ─── COMPLETE SCREEN ──────────────────────────────────────
+function showCompleteScreen() {
+  const bio  = calcBio();
+  const isa  = calcISA(bio.isUnsafe, bio.margin);
+  const qtra = calcQTRA(bio.isUnsafe, bio.margin);
+  const lm = {bajo:'BAJO',moderado:'MODERADO',alto:'ALTO',extremo:'EXTREMO'};
+  const lc = {bajo:'rd-low',moderado:'rd-mod',alto:'rd-high',extremo:'rd-ext'};
+  const pl = {improbable:'Improbable',algo_probable:'Algo Probable',probable:'Probable',muy_probable:'Muy Probable'};
+  const recs = buildRecs(isa, bio, qtra);
+
+  let rinnTitle = '—', rinnDetail = 'Complete la sección Biometría APO.', rinnCls = 'rd-low';
+  if (bio.valid) {
+    const m = bio.margin;
+    if (m === null) {
+      rinnTitle = 'Sin t_actual'; rinnCls = 'rd-mod';
+      rinnDetail = `t_req = ${bio.t_req.toFixed(2)} cm. Requiere medición con resistógrafo para completar el análisis.`;
+    } else if (m >= 130) {
+      rinnTitle = '✅ MARGEN SEGURO'; rinnCls = 'rd-low';
+      rinnDetail = `Margen ${m.toFixed(1)}% · t_actual=${bio.tAct.toFixed(2)} cm ≥ t_req=${bio.t_req.toFixed(2)} cm. Estabilidad biomecánica adecuada.`;
+    } else if (m >= 100) {
+      rinnTitle = '⚠️ MARGEN LÍMITE'; rinnCls = 'rd-mod';
+      rinnDetail = `Margen ${m.toFixed(1)}% · t_actual=${bio.tAct.toFixed(2)} cm ≈ t_req=${bio.t_req.toFixed(2)} cm. Sin margen de reserva — monitoreo frecuente.`;
+    } else {
+      rinnTitle = '🚨 CUELLO DE BOTELLA CRÍTICO'; rinnCls = 'rd-ext';
+      rinnDetail = `Margen ${m.toFixed(1)}% · FALLO BIOMECÁNICO: t_actual=${bio.tAct.toFixed(2)} cm < t_req=${bio.t_req.toFixed(2)} cm. INTERVENCIÓN URGENTE.`;
+    }
+  }
+
+  document.getElementById('csBody').innerHTML = `
+    <div class="cs-card">
+      <div class="cs-card-title">■ Clasificación ISA TRAQ</div>
+      <div class="risk-display">
+        <div class="rd-level ${lc[isa.level]||'rd-low'}">${lm[isa.level]||'—'}</div>
+        <div class="rd-label">${pl[isa.probComb]||'—'}</div>
+      </div>
+      ${isa.override?'<div style="text-align:center;font-size:10px;font-weight:700;color:#fbbf24;background:rgba(251,191,36,.1);padding:6px;border-radius:6px">⚡ Nivel sobreescrito por análisis biomecánico Rinntech APO</div>':''}
+    </div>
+    <div class="cs-card">
+      <div class="cs-card-title">■ QTRA v5 — Riesgo Actuarial</div>
+      <div style="text-align:center;padding:10px 0">
+        <div class="csm-val ${qtra.cls}" style="font-size:26px;font-family:'IBM Plex Mono',monospace">${qtra.str}</div>
+        <div style="font-size:11px;color:rgba(255,255,255,.7);margin-top:4px;font-weight:700;text-transform:uppercase;letter-spacing:1px">${qtra.status}</div>
+      </div>
+      <div class="cs-metrics">
+        <div class="cs-metric"><div class="csm-label">Diana (Target)</div><div class="csm-val">${qtra.target>0?'1/'+Math.round(1/qtra.target).toLocaleString():'1/∞'}</div></div>
+        <div class="cs-metric"><div class="csm-label">Tamaño (Size)</div><div class="csm-val">${qtra.size>0?'1/'+Math.round(1/qtra.size):'0'}</div></div>
+        <div class="cs-metric"><div class="csm-label">PoF</div><div class="csm-val">${qtra.pof>0?'1/'+Math.round(1/qtra.pof):'—'}</div></div>
+        <div class="cs-metric"><div class="csm-label">RoH denom.</div><div class="csm-val ${qtra.denom<=1000?'csm-bad':qtra.denom<=1000000?'csm-warn':'csm-ok'}">${qtra.denom===Infinity?'∞':qtra.denom.toLocaleString()}</div></div>
+      </div>
+    </div>
+    <div class="cs-card">
+      <div class="cs-card-title">■ Rinntech APO — Biomecánica (Rinn 2015)</div>
+      ${bio.valid ? `
+        <div class="rinn-verdict">
+          <div class="rv-main ${rinnCls}">${rinnTitle}</div>
+          <div class="rv-detail">${rinnDetail}</div>
+        </div>
+        <div class="cs-metrics">
+          <div class="cs-metric"><div class="csm-label">t_req (mínimo)</div><div class="csm-val csm-warn">${bio.t_req.toFixed(2)} cm</div></div>
+          <div class="cs-metric"><div class="csm-label">t_actual</div><div class="csm-val ${bio.tAct>0?(bio.isUnsafe?'csm-bad':'csm-ok'):'csm-val'}">${bio.tAct>0?bio.tAct.toFixed(2)+' cm':'—'}</div></div>
+          <div class="cs-metric"><div class="csm-label">Hf (centro carga)</div><div class="csm-val">${bio.Hf.toFixed(0)} cm</div></div>
+          <div class="cs-metric"><div class="csm-label">Ratio palanca</div><div class="csm-val">${bio.ratio.toFixed(3)}</div></div>
+          ${bio.margin!==null?`<div class="cs-metric" style="grid-column:1/-1"><div class="csm-label">Margen Estructural</div><div class="csm-val ${bio.margin>=130?'csm-ok':bio.margin>=100?'csm-warn':'csm-bad'}" style="font-size:22px">${bio.margin.toFixed(1)}%</div></div>`:''}
+        </div>
+        <div style="background:rgba(255,255,255,.05);border-radius:8px;padding:9px 11px;margin-top:8px">
+          <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.4);margin-bottom:5px;text-transform:uppercase;letter-spacing:1px">Fórmula Autorreferencia (Rinn 2015)</div>
+          <div style="font-family:'IBM Plex Mono',monospace;font-size:10px;color:#86efac;line-height:1.7">
+            Hf = (H + C) / 2 = ${bio.Hf.toFixed(0)} cm<br>
+            ratio = (Hf−Hd)/(Hf−Hi) = ${bio.ratio.toFixed(4)}<br>
+            t_req = 0.5 × (Dd − ⁴√(Dd⁴ − Di³·Dd·ratio)) = ${bio.t_req.toFixed(2)} cm
+          </div>
+        </div>
+      ` : '<div style="color:rgba(255,255,255,.4);text-align:center;padding:20px;font-size:12px">Complete la Fase 4 (Biometría) para el análisis biomecánico.</div>'}
+    </div>
+    <div class="cs-card">
+      <div class="cs-card-title">💡 Recomendaciones</div>
+      <div class="cs-recs">
+        ${recs.map(r=>`<div class="cs-rec-item"><div class="rec-dot" style="background:${r.c};flex-shrink:0;width:7px;height:7px;border-radius:50%;margin-top:3px"></div><span>${r.t}</span></div>`).join('')}
+      </div>
+    </div>
+    <div class="cs-card">
+      <div class="cs-card-title">📋 Datos del Árbol</div>
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px">
+        ${[['ID',get('arbolId')||'—'],['Especie',get('especie')||'—'],['Evaluador',get('evaluador')||'—'],['Cliente',get('cliente')||'—'],['Vigor',get('vigor')||'—'],['Exposición Viento',get('exposViento')||'—']].map(([k,v])=>`
+        <div style="background:rgba(255,255,255,.05);border-radius:7px;padding:7px 9px">
+          <div style="font-size:9px;font-weight:700;color:rgba(255,255,255,.4);text-transform:uppercase;letter-spacing:.5px;margin-bottom:1px">${k}</div>
+          <div style="font-size:12px;font-weight:600;color:#fff;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${v}</div>
+        </div>`).join('')}
+      </div>
+      ${gpsCoords?`<div style="margin-top:8px;padding:8px 10px;background:rgba(34,197,94,.1);border-radius:7px;border:1px solid rgba(34,197,94,.2)">
+        <div style="font-family:'IBM Plex Mono',monospace;font-size:11px;color:#4ade80">📍 ${gpsCoords.lat.toFixed(5)}, ${gpsCoords.lng.toFixed(5)}</div>
+        <a href="https://maps.google.com/?q=${gpsCoords.lat},${gpsCoords.lng}" target="_blank" style="font-size:10px;color:#60a5fa;font-weight:700">Ver en Google Maps →</a>
+      </div>`:''}
+    </div>
+    <button class="save-btn" onclick="saveAssessment()" id="csSaveBtn">💾 Guardar en la Nube</button>
+    <div style="height:24px"></div>
+  `;
+  document.getElementById('completeScreen').classList.add('open');
+}
+window.showCompleteScreen = showCompleteScreen;
+
+function closeComplete() {
+  document.getElementById('completeScreen').classList.remove('open');
+}
+window.closeComplete = closeComplete;
+
+// ─── FIREBASE SAVE ────────────────────────────────────────
+async function saveAssessment() {
+  if (!window._fbPush) { showNotif('Firebase no disponible'); return; }
+  const bio  = calcBio();
+  const isa  = calcISA(bio.isUnsafe, bio.margin);
+  const qtra = calcQTRA(bio.isUnsafe, bio.margin);
+  const doc = {
+    timestamp:   Date.now(),
+    arbolId:     get('arbolId') || 'Sin ID',
+    especie:     get('especie') || 'Desconocida',
+    evaluador:   get('evaluador') || '',
+    cliente:     get('cliente') || '',
+    gps:         gpsCoords || null,
+    isaLevel:    isa.level,
+    qtraStr:     qtra.str,
+    qtraStatus:  qtra.status,
+    qtraDenom:   qtra.denom === Infinity ? null : qtra.denom,
+    bioMargin:   bio.margin,
+    bioCritical: bio.isUnsafe,
+    tReq:        bio.valid ? bio.t_req : null,
+    tActual:     bio.tAct || null,
+    answers
+  };
+  try {
+    await window._fbPush(doc);
+    showNotif('💾 Evaluación guardada en Firebase ✅');
+    ['saveBtn','csSaveBtn'].forEach(id => {
+      const btn = document.getElementById(id);
+      if (btn) { btn.textContent = '✅ Guardado correctamente'; btn.className = 'save-btn saved'; btn.disabled = true; }
+    });
+  } catch (e) {
+    showNotif('❌ Error: ' + e.message);
+  }
+}
+window.saveAssessment = saveAssessment;
+
+// ─── MAP ──────────────────────────────────────────────────
+function initMap() {
+  if (mapInstance) return;
+  
+  const osm = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+    attribution: '© OpenStreetMap', maxZoom: 19
+  });
+  const sat = L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+    attribution: 'Tiles &copy; Esri', maxZoom: 19
+  });
+
+  mapInstance = L.map('leafletMap', { 
+    center: [-33.45, -70.65], 
+    zoom: 12,
+    layers: [sat] // Mapa satelital por defecto
+  });
+  
+  const baseMaps = {
+    "Satelital": sat,
+    "Mapa Normal": osm
+  };
+  L.control.layers(baseMaps).addTo(mapInstance);
+
+  refreshMap();
+}
+
+function refreshMap() {
+  if (!mapInstance) return;
+  mapMarkers.forEach(m => mapInstance.removeLayer(m));
+  mapMarkers = [];
+  const data = window._dbAll;
+  if (!data) { document.getElementById('mapSubtitle').textContent = 'Sin datos registrados.'; return; }
+  const entries = Object.entries(data);
+  const withGps = entries.filter(([,d]) => d.gps);
+  document.getElementById('mapSubtitle').textContent = `${entries.length} árbol(es) · ${withGps.length} con GPS`;
+  const colors = {bajo:'#15803d',moderado:'#f59e0b',alto:'#f97316',extremo:'#b91c1c'};
+  const bounds = [];
+  entries.forEach(([key, d]) => {
+    if (!d.gps) return;
+    const { lat, lng } = d.gps;
+    const color = colors[d.isaLevel] || '#6b7280';
+    const icon = L.divIcon({
+      className:'',
+      html:`<div style="width:26px;height:26px;border-radius:50%;background:${color};border:3px solid #fff;box-shadow:0 2px 8px rgba(0,0,0,.3);display:flex;align-items:center;justify-content:center;font-size:11px">🌳</div>`,
+      iconSize:[26,26],iconAnchor:[13,13]
+    });
+    const lvlLabel = {bajo:'BAJO',moderado:'MODERADO',alto:'ALTO',extremo:'EXTREMO'};
+    const marker = L.marker([lat,lng],{icon}).addTo(mapInstance);
+    const dt = new Date(d.timestamp).toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'numeric'});
+    marker.bindPopup(`
+      <div style="min-width:170px;font-family:'IBM Plex Sans',sans-serif;padding:2px">
+        <div style="font-family:'IBM Plex Mono',sans-serif;font-size:11px;font-weight:700;color:#1d4ed8">${d.arbolId}</div>
+        <div style="font-size:14px;font-weight:900;color:#1a1a1a;margin:2px 0">${d.especie}</div>
+        <div style="font-size:10px;color:#666;margin-bottom:6px">Por ${d.evaluador||'—'} · ${dt}</div>
+        <div style="display:inline-block;padding:3px 9px;border-radius:10px;font-size:11px;font-weight:700;background:${color}22;color:${color};border:1.5px solid ${color};margin-bottom:7px">Riesgo: ${lvlLabel[d.isaLevel]||'—'}</div>
+        <div style="font-size:10px;color:#666">RoH: ${d.qtraStr||'—'}</div>
+        <button onclick="showTreeDetail('${key}')" style="display:block;width:100%;margin-top:7px;padding:7px;background:#166534;color:#fff;border:none;border-radius:7px;font-weight:700;font-size:11px;cursor:pointer">Ver Evaluación Completa</button>
+      </div>`);
+    mapMarkers.push(marker);
+    bounds.push([lat, lng]);
+  });
+  if (bounds.length > 0) {
+    try { mapInstance.fitBounds(bounds, {padding:[40,40],maxZoom:16}); } catch(e) {}
+  }
+}
+
+// ─── DATABASE ─────────────────────────────────────────────
+function populateClientList() {
+  const sel = document.getElementById('f-cliente');
+  if (!sel || !window._dbAll) return;
+  const current = sel.value;
+  const clients = new Set();
+  Object.values(window._dbAll).forEach(d => {
+    if (d.cliente) clients.add(d.cliente);
+    else if (d.answers && d.answers.cliente) clients.add(d.answers.cliente);
+  });
+  sel.innerHTML = '<option value="">Todos</option>' + [...clients].sort().map(c => `<option value="${c}">${c}</option>`).join('');
+  sel.value = current;
+}
+window.populateClientList = populateClientList;
+
+function updateFilters() {
+  const searchInput = document.getElementById('dbSearch');
+  const clientSelect = document.getElementById('f-cliente');
+  const dianaSelect = document.getElementById('f-diana');
+  const valorSelect = document.getElementById('f-valor');
+  
+  if (!window._dbAll) return;
+
+  const search = searchInput ? searchInput.value.toLowerCase() : '';
+  const client = clientSelect ? clientSelect.value : '';
+  const diana = dianaSelect ? dianaSelect.value : '';
+  const valMin = valorSelect ? parseFloat(valorSelect.value) : 0;
+  
+  const entries = Object.entries(window._dbAll).reverse().filter(([k, d]) => {
+    const sMatch = !search ||
+      (d.arbolId || '').toLowerCase().includes(search) ||
+      (d.especie || '').toLowerCase().includes(search) ||
+      (d.evaluador || '').toLowerCase().includes(search);
+    const cMatch = !client || d.cliente === client || (d.answers && d.answers.cliente === client);
+    const dMatch = !diana || (d.answers && d.answers.tasaOcup && d.answers.tasaOcup.startsWith(diana));
+    const vMatch = ((d.answers && parseFloat(d.answers.valorProp)) || 0) >= valMin;
+    return sMatch && cMatch && dMatch && vMatch;
+  });
+
+  renderDBList(entries);
+}
+window.updateFilters = updateFilters;
+
+function renderDBList(entries) {
+  const scroll = document.getElementById('dbScroll');
+  const count = document.getElementById('dbCount');
+  if (!scroll) return;
+
+  const totalCount = Object.keys(window._dbAll || {}).length;
+  if (count) count.textContent = entries.length + ' de ' + totalCount + ' evaluaciones';
+
+  if (!entries.length) {
+    scroll.innerHTML = `<div class="db-empty">🔍 Sin resultados</div>`;
+    return;
+  }
+  
+  const lvlCls = {bajo:'tp-low',moderado:'tp-mod',alto:'tp-high',extremo:'tp-ext'};
+  const lvlLabel = {bajo:'Bajo',moderado:'Moderado',alto:'Alto',extremo:'Extremo'};
+  
+  scroll.innerHTML = entries.map(([key, d]) => {
+    const dt = new Date(d.timestamp).toLocaleDateString('es-ES',{day:'2-digit',month:'short',year:'2-digit',hour:'2-digit',minute:'2-digit'});
+    return `
+      <div class="tree-card" onclick="showTreeDetail('${key}')">
+        <div class="tc-head">
+          <div class="tc-id">${d.arbolId}</div>
+          <div class="tc-species">${d.especie}</div>
+          <div class="tc-evaluator">Por: ${d.evaluador||'—'}${d.cliente?' · '+d.cliente:''}</div>
+        </div>
+        <div class="tc-body">
+          <div class="tc-pills">
+            <span class="tc-pill ${lvlCls[d.isaLevel]||'tp-low'}">ISA: ${lvlLabel[d.isaLevel]||'—'}</span>
+            <span class="tc-pill" style="color:#555;border-color:#ddd">RoH: ${d.qtraStr||'—'}</span>
+            ${d.bioCritical?'<span class="tc-pill tp-ext">⚠️ Cuello Crítico</span>':''}
+          </div>
+          <div class="tc-meta">
+            ${d.gps?`<div class="tc-gps">📍 ${d.gps.lat.toFixed(4)}, ${d.gps.lng.toFixed(4)}</div>`:'<div></div>'}
+            <div class="tc-date">${dt}</div>
+          </div>
+          ${d.bioMargin!=null?`<div style="margin-top:3px;font-size:10px;font-weight:700;color:${d.bioCritical?'var(--r700)':'var(--g800)'}">Margen Rinntech: ${typeof d.bioMargin==='number'?d.bioMargin.toFixed(1)+'%':d.bioMargin+'%'}</div>`:''}
+        </div>
+      </div>`;
+  }).join('');
+}
+
+function filterDB(val) { 
+  if (window.updateFilters) updateFilters(); 
+}
+window.filterDB = filterDB;
+
+function exportToCSV() {
+  const data = window._dbAll;
+  if (!data) return showNotif("No hay datos para exportar");
+
+  let csvContent = "data:text/csv;charset=utf-8,ID,Especie,Evaluador,Cliente,Fecha,Latitud,Longitud,Riesgo ISA,RoH QTRA,Margen APO,Ocupacion Diana,Valor Diana\n";
+
+  Object.values(data).forEach(d => {
+    const dt = new Date(d.timestamp).toLocaleDateString('es-ES');
+    const lat = d.gps ? d.gps.lat : "";
+    const lng = d.gps ? d.gps.lng : "";
+    const isa = d.isaLevel || "";
+    const qtra = d.qtraStr || "";
+    const margen = d.bioMargin !== undefined && d.bioMargin !== null ? d.bioMargin : "";
+    
+    const cliente = d.cliente || (d.answers && d.answers.cliente) || "";
+    const ocupacion = (d.answers && d.answers.tasaOcup) || "";
+    const valor = (d.answers && d.answers.valorProp) || "";
+
+    const row = `"${d.arbolId}","${d.especie}","${d.evaluador}","${cliente}","${dt}","${lat}","${lng}","${isa}","${qtra}","${margen}","${ocupacion}","${valor}"`;
+    csvContent += row + "\n";
+  });
+
+  const encodedUri = encodeURI(csvContent);
+  const link = document.createElement("a");
+  link.setAttribute("href", encodedUri);
+  link.setAttribute("download", "evaluaciones_arbolado.csv");
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+}
+window.exportToCSV = exportToCSV;
+
+function showTreeDetail(key) {
+  const data = window._dbAll;
+  if (!data || !data[key]) return;
+  const d = data[key];
+  const lvlCls = {bajo:'rb-low',moderado:'rb-mod',alto:'rb-high',extremo:'rb-ext'};
+  const lvlLabel = {bajo:'BAJO',moderado:'MODERADO',alto:'ALTO',extremo:'EXTREMO'};
+  const dt = new Date(d.timestamp).toLocaleString('es-ES',{day:'2-digit',month:'long',year:'numeric',hour:'2-digit',minute:'2-digit'});
+  document.getElementById('modalTitle').textContent = `🌳 ${d.arbolId} · ${d.especie}`;
+  const ans = d.answers || {};
+  const fields = [
+    ['Cliente',ans.cliente || d.cliente],['Evaluador',ans.evaluador || d.evaluador],['Especie',d.especie],
+    ['Vigor',ans.vigor],['Exposición Viento',ans.exposViento],['Perfil Fallo',ans.perfilFallo],
+    ['Prob. Fallo',ans.probFallo],['Consecuencias',ans.consec],
+    ['Parte Fallo',ans.parteFallo],['Ø Parte Fallo',ans.diaFallo],
+    ['Peatones/día',ans.peatones!=null?ans.peatones:null],['Vehículos/día',ans.vehiculos!=null?ans.vehiculos:null],
+    ['Valor Propiedad (USD)', ans.valorProp!=null?ans.valorProp:null]
+  ].filter(([,v]) => v !== undefined && v !== null && v !== '');
+
+  document.getElementById('modalBody').innerHTML = `
+    <div class="risk-banner ${lvlCls[d.isaLevel]||'rb-low'}">
+      <div class="rb-level">${lvlLabel[d.isaLevel]||'—'}</div>
+      <div class="rb-label">Riesgo ISA TRAQ</div>
+    </div>
+    <div style="display:grid;grid-template-columns:1fr 1fr;gap:5px;margin-bottom:12px">
+      <div class="detail-item"><div class="di-label">QTRA RoH</div><div class="di-val" style="color:var(--b700)">${d.qtraStr||'—'}</div></div>
+      <div class="detail-item"><div class="di-label">QTRA Estado</div><div class="di-val">${d.qtraStatus||'—'}</div></div>
+      ${d.tReq?`<div class="detail-item"><div class="di-label">t_req Rinntech</div><div class="di-val">${typeof d.tReq==='number'?d.tReq.toFixed(2):d.tReq} cm</div></div>`:''}
+      ${d.bioMargin!=null?`<div class="detail-item"><div class="di-label">Margen Estructural</div><div class="di-val" style="color:${d.bioCritical?'var(--r700)':'var(--g800)'}">${typeof d.bioMargin==='number'?d.bioMargin.toFixed(1):d.bioMargin}%</div></div>`:''}
+      ${d.bioCritical?'<div class="detail-item" style="grid-column:1/-1;background:var(--r100);border-color:var(--r400)"><div class="di-label" style="color:var(--r700)">⚠️ Alerta Biomecánica</div><div class="di-val" style="color:var(--r700)">CUELLO DE BOTELLA CRÍTICO</div></div>':''}
+    </div>
+    <div class="detail-section">
+      <div class="detail-sec-title">Datos del Árbol</div>
+      <div class="detail-grid">
+        ${fields.map(([k,v])=>`<div class="detail-item"><div class="di-label">${k}</div><div class="di-val">${v}</div></div>`).join('')}
+      </div>
+    </div>
+    ${d.gps?`
+    <div class="detail-section">
+      <div class="detail-sec-title">Ubicación GPS</div>
+      <div style="padding:9px;background:var(--g50);border:1px solid var(--g700);border-radius:8px;font-family:'IBM Plex Mono',monospace;font-size:12px;color:var(--g800)">
+        📍 ${d.gps.lat.toFixed(6)}, ${d.gps.lng.toFixed(6)}
+        <br><a href="https://maps.google.com/?q=${d.gps.lat},${d.gps.lng}" target="_blank" style="color:var(--b700);font-size:11px;font-weight:700">Abrir en Google Maps →</a>
+      </div>
+    </div>`:''}
+    <div style="font-size:10px;color:var(--muted);text-align:center;padding-top:6px">Evaluado: ${dt}</div>
+    
+    <button onclick="deleteRecord('${key}')" style="margin-top:16px; width:100%; padding:12px; background:var(--r100); color:var(--r700); border:1.5px solid var(--r400); border-radius:8px; font-weight:700; font-family:'IBM Plex Sans',sans-serif; cursor:pointer;">🗑️ Eliminar Evaluación Permanente</button>
+  `;
+  document.getElementById('detailModal').classList.add('open');
+}
+window.showTreeDetail = showTreeDetail;
+
+async function deleteRecord(key) {
+  if (confirm("¿Estás seguro de que deseas eliminar esta evaluación de forma permanente?")) {
+    try {
+      if (!window._fbRemove) throw new Error("Base de datos no conectada");
+      
+      // Actualización optimista: Borramos visualmente de inmediato para no esperar el lag de red
+      if (window._dbAll && window._dbAll[key]) {
+          delete window._dbAll[key];
+      }
+      if (window.updateFilters) window.updateFilters();
+      closeModal();
+      
+      // Eliminamos el dato real en Firebase en segundo plano
+      await window._fbRemove(key);
+      showNotif("🗑️ Registro eliminado");
+      
+    } catch(e) {
+      console.error("Error al eliminar:", e);
+      showNotif("❌ Error al eliminar: " + e.message);
+    }
+  }
+}
+window.deleteRecord = deleteRecord;
+
+function closeModal() {
+  document.getElementById('detailModal').classList.remove('open');
+}
+window.closeModal = closeModal;
+
+// ─── TAB SWITCHING ────────────────────────────────────────
+function switchTab(tab) {
+  document.querySelectorAll('.view').forEach(v => v.classList.remove('active'));
+  document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+  
+  const viewId = tab === 'db' ? 'viewDB' : 'view' + tab.charAt(0).toUpperCase() + tab.slice(1);
+  const viewEl = document.getElementById(viewId);
+  if (viewEl) viewEl.classList.add('active');
+  
+  const tabEl = document.getElementById('tab-' + tab);
+  if (tabEl) tabEl.classList.add('active');
+
+  if (tab === 'map') {
+    setTimeout(() => { if (typeof initMap === 'function') initMap(); if (mapInstance) mapInstance.invalidateSize(); }, 100);
+  }
+}
+window.switchTab = switchTab;
+
+// ─── NOTIFICATIONS ────────────────────────────────────────
+function showNotif(msg) {
+  const n = document.getElementById('notif');
+  if (!n) return;
+  n.textContent = msg;
+  n.classList.add('show');
+  setTimeout(() => n.classList.remove('show'), 3500);
+}
+window.showNotif = showNotif;
+
+// ─── RESET ────────────────────────────────────────────────
+function resetForm() {
+  answers = {};
+  gpsCoords = null;
+  _multiSel = {};
+  assessmentDone = false;
+  buildForm();
+  switchTab('form');
+  const scrollEl = document.getElementById('formScroll');
+  if (scrollEl) scrollEl.scrollTop = 0;
+}
+window.resetForm = resetForm;
+
+// Expose all handlers
+window.submitChoice  = submitChoice;
+window.submitMulti   = submitMulti;
+window.submitGroup   = submitGroup;
+window.submitText    = submitText;
+window.submitTextSkip= submitTextSkip;
+window.submitNumber  = submitNumber;
+window.editQuestion  = editQuestion;
+window.toggleMulti   = toggleMulti;
+
+// ─── INIT ─────────────────────────────────────────────────
+buildForm();
+computeAll();
+</script>
+</body>
+</html>
